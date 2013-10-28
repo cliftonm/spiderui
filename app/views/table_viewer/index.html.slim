@@ -1,8 +1,9 @@
 =form_for @table_viewer do |f|
   .navigation_history
-    p = "Nav History: #{@breadcrumbs}"
+    p = "Nav History:"
     br
-    = f.submit("Back", name: 'navigate_back')
+    - @breadcrumbs.each_with_index do |table_name, index|
+      = link_to content_tag(:span, "#{table_name.partition('.')[2]}"), navigate_back_path(index: index), {:class => "button"}, :onclick => 'this.blur();'
   .table_list_region
     p Tables:
     .table_list

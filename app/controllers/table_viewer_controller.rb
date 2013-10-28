@@ -16,7 +16,7 @@ class TableViewerController < ApplicationController
     @tables = case_insensitive_sort(Schema.user_tables)          # Too large to save in a session!  This is annoying because we're loading this from the DB every single time!!!
     @table_name = nil
     load_table_data(session[:table_name]) if session[:table_name]
-    @breadcrumbs = find_or_create_in_session(session, :breadcrumbs) {""}
+    @breadcrumbs = find_or_create_in_session(session, :breadcrumbs) {[]}
   end
 
   # Respond to a user selecting a table.  We store the table name in the session and redirect to the index page.
@@ -29,10 +29,6 @@ class TableViewerController < ApplicationController
   # Respond to the user navigating to a parent or child.
   # We store the appropriate table name in the session and redirect to the index page.
   def post
-    if params[:navigate_back]
-      # pop the navigation tree stack
-    end
-
     if params[:navigate_to_parent]
       target_table = params[:cbParents]
       # If items in the current table are selected, then these are FK's to the parent table.
@@ -53,17 +49,27 @@ class TableViewerController < ApplicationController
     redirect_to table_viewer_path+"/index"
   end
 
+  # Navigate back to the selected table in the nav history and pop the stack to that point.
+  def nav_back
+    stack_idx = params[:index].to_i
+    @breadcrumbs = find_or_create_in_session(session, :breadcrumbs) {[]}
+    session[:table_name] = @breadcrumbs[stack_idx]
+    @breadcrumbs = @breadcrumbs[0..stack_idx]
+    session[:breadcrumbs] = @breadcrumbs
+
+    redirect_to table_viewer_path+"/index"
+  end
+
   private
 
   def create_breadcrumb_trail(target_table)
-    @breadcrumbs = target_table
+    @breadcrumbs = [target_table]
     session[:breadcrumbs] = @breadcrumbs
   end
 
   def add_to_breadcrumb_trail(target_table)
-    @breadcrumbs = find_or_create_in_session(session, :breadcrumbs) {""}
-    @breadcrumbs << " => " if @breadcrumbs != ""
-    @breadcrumbs << target_table
+    @breadcrumbs = find_or_create_in_session(session, :breadcrumbs) {[]}
+    @breadcrumbs.push(target_table)
     session[:breadcrumbs] = @breadcrumbs
   end
 

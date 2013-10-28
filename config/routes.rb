@@ -6,5 +6,7 @@ DatabaseSpider::Application.routes.draw do
   get "dynamic_tables" => "table_viewer#index"
   post "dynamic_tables" => "table_viewer#post"
 
+  get "navigate_back" => "table_viewer#nav_back"
+
 
 end
