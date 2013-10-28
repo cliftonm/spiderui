@@ -1,0 +1,37 @@
+Schema:
+  user_tables: "
+    select s.name + '.' + o.name as table_name
+    from sys.objects o
+    left join sys.schemas s on s.schema_id = o.schema_id
+    where type_desc = 'USER_TABLE'"
+  get_parents: "
+    SELECT
+      f.parent_object_id as ChildObjectID,
+      SCHEMA_NAME(f.schema_id) SchemaName,
+      OBJECT_NAME(f.parent_object_id) TableName,
+      COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
+      SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
+      OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
+      COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
+    FROM sys.foreign_keys AS f
+      INNER JOIN sys.foreign_key_columns AS fc ON f.OBJECT_ID = fc.constraint_object_id
+      INNER JOIN sys.tables t ON t.object_id = fc.referenced_object_id
+      INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
+    WHERE
+      OBJECT_NAME (f.parent_object_id) = '[table]'"
+  get_children: "
+    SELECT f.parent_object_id as ChildObjectID,
+      SCHEMA_NAME(f.schema_id) SchemaName,
+      OBJECT_NAME(f.parent_object_id) TableName,
+      COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
+      SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
+      OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
+      COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
+    FROM
+      sys.foreign_keys AS f
+      INNER JOIN sys.foreign_key_columns AS fc ON fc.constraint_object_id = f.OBJECT_ID
+      INNER JOIN sys.tables t ON t.OBJECT_ID = fc.referenced_object_id
+      INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
+    WHERE
+      OBJECT_NAME (f.referenced_object_id) = '[table]'"
+

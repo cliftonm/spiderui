@@ -1,0 +1,49 @@
+=form_for @table_viewer do |f|
+  .navigation_history
+    p = "Nav History: #{@breadcrumbs}"
+    br
+    = f.submit("Back", name: 'navigate_back')
+  .table_list_region
+    p Tables:
+    .table_list
+      ul
+        - @tables.each do |table_name|
+            li
+              = link_to(table_viewer_path(table_name: table_name)) do
+                t #{table_name}
+
+  - if !@table_name.nil?
+    .table_data_region
+      p #{@table_name}
+      .table_data
+        table
+          - # Display header
+          tr
+            - # Dummy header column for checkbox
+            th
+
+            - # Header of field names
+            - @fields.each do |field_name|
+              - if display_field?(@table_name, field_name)
+                th = field_name
+
+          - # Display records
+          - @records.each_with_index do |record, index|
+            tr class=cycle('row0', 'row1')
+              td
+                = check_box_tag 'selected_records[]', record[@fields[0]]
+              - @fields.each do |field_name|
+                - if display_field?(@table_name, field_name)
+                  td = fix_encoding(record[field_name])
+      .digg_pagination
+        = will_paginate @records
+
+    .navigation
+      fieldset
+        legend Navigation:
+        br Navigate to parent:
+        = select_tag "cbParents", options_from_collection_for_select(@parent_tables, 'id', 'name')
+        = f.submit("Go", name: 'navigate_to_parent')
+        br Navigate to child:
+        = select_tag "cbChildren", options_from_collection_for_select(@child_tables, 'id', 'name')
+        = f.submit("Go", name: 'navigate_to_child')
