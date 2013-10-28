@@ -24,17 +24,19 @@
             th
 
             - # Header of field names
-            - @fields.each do |field_name|
-              - if display_field?(@table_name, field_name)
-                th = field_name
+            - visible_fields.each do |field_name|
+              th = field_name
 
           - # Display records
-          - @records.each_with_index do |record, index|
+          - @records.each do |record|
             tr class=cycle('row0', 'row1')
               td
-                = check_box_tag 'selected_records[]', record[@fields[0]]
-              - @fields.each do |field_name|
-                - if display_field?(@table_name, field_name)
+                - # __idx is added by the controller to uniquely identify a record.
+                = check_box_tag 'selected_records[]', record["__idx"]
+              - visible_fields.each_with_index do |field_name, field_index|
+                - if field_index == visible_fields.length - 1
+                  td.last = fix_encoding(record[field_name])
+                - else
                   td = fix_encoding(record[field_name])
       .digg_pagination
         = will_paginate @records

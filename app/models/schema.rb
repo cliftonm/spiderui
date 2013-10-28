@@ -14,21 +14,30 @@ class Schema
 
   # Returns an array of hashes (column name => value) of the parent tables of the specified table.
   def self.load_parents(table_name)
-    client = create_db_client
     sql = get_query("Schema", "get_parents")
     sql.sub!('[table]', table_name.partition('.')[2])
-    result = client.execute(sql)
-    records = result.each(as: :array, symbolize_keys: true)
-    array = convert_to_array_of_hashes(result.fields, records)
-
-    array
+    execute(sql)
   end
 
   # Returns an array of hashes (column name => value) of the child tables of the specified table.
   def self.load_children(table_name)
-    client = create_db_client
     sql = get_query("Schema", "get_children")
     sql.sub!('[table]', table_name.partition('.')[2])
+    execute(sql)
+  end
+
+  def self.get_key_fields(child_table, parent_table)
+    sql = get_query("Schema", "get_key_fields")
+    # TODO: We should be using the qualified object ID, as this is ignoring the schema!
+    sql.sub!('[childtable]', child_table.partition('.')[2])
+    sql.sub!('[parenttable]', parent_table.partition('.')[2])
+    execute(sql)
+  end
+
+  private
+
+  def self.execute(sql)
+    client = create_db_client
     result = client.execute(sql)
     records = result.each(as: :array, symbolize_keys: true)
     array = convert_to_array_of_hashes(result.fields, records)

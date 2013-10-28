@@ -7,6 +7,7 @@ gem 'rails', '3.2.15'
 
 gem 'tiny_tds'
 gem 'activerecord-sqlserver-adapter'
+gem 'sqlite3'
 gem 'slim'
 gem 'thin'
 gem 'sass'

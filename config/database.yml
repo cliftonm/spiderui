@@ -24,3 +24,10 @@ production:
   database: db/production.sqlite3
   pool: 5
   timeout: 5000
+
+# use sqlite3 as the DB for storing session information.
+sessions:
+  adapter: sqlite3
+  database: db/session.sqlite3
+  pool: 5
+  timeout: 5000
