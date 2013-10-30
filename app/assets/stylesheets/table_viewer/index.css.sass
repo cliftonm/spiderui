@@ -100,7 +100,6 @@
     background-position: bottom left
     padding: 6px 0 4px 18px /* push text down 1px */
     
-
 .navigation
   float: left
   width: 200px
@@ -110,11 +109,13 @@
   fieldset
     width: 240px
     height: 592px
-    select
-      width: 80%
-      margin-bottom: 15px
-    input
-      margin-left: 5px
+    /* Separate div because 'Go' buttons are left padded. */
+    .nav_options
+      select
+        width: 80%
+        margin-bottom: 15px
+      input
+        margin-left: 5px
 
 /* Pagination Styles */
 

@@ -54,9 +54,11 @@
         br
         = f.submit("Show All Records", name: 'navigate_show_all')
         br
-        br Navigate to parent:
-        = select_tag "cbParents", options_from_collection_for_select(@parent_tables, 'id', 'name')
-        = f.submit("Go", name: 'navigate_to_parent')
-        br Navigate to child:
-        = select_tag "cbChildren", options_from_collection_for_select(@child_tables, 'id', 'name')
-        = f.submit("Go", name: 'navigate_to_child')
+        - # Separate div because 'Go' buttons are left padded.
+        .nav_options
+          br Navigate to parent:
+          = select_tag "cbParents", options_from_collection_for_select(@parent_tables, 'id', 'name')
+          = f.submit("Go", name: 'navigate_to_parent')
+          br Navigate to child:
+          = select_tag "cbChildren", options_from_collection_for_select(@child_tables, 'id', 'name')
+          = f.submit("Go", name: 'navigate_to_child')

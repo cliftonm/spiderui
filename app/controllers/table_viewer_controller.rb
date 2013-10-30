@@ -9,6 +9,8 @@ class TableViewerController < ApplicationController
   attr_session_accessor :table_name
   attr_session_accessor :qualifier
   attr_session_accessor :breadcrumbs
+  attr_session_accessor :last_page_num
+  attr_session_accessor :force_page_num
 
   # The main page.
   # If a :table_name exists in the session, then the table data is loaded and displayed, as well as the
@@ -18,7 +20,9 @@ class TableViewerController < ApplicationController
     initialize_attributes
 
     if self.table_name
-      @records, @fields = load_DDO(self.table_name, self.qualifier)
+      restore_page_number_on_nav                  # restores the page number when navigating back along the breadcrumbs
+      self.last_page_num = params[:page]          # preserve the page number so selected navigation records are selected from the correct page.
+      @records, @fields = load_DDO(self.table_name, self.last_page_num, self.qualifier)
       add_hidden_index_values(@records, @fields)
       load_navigators(self.table_name)
     end
@@ -74,12 +78,15 @@ class TableViewerController < ApplicationController
   end
 
   # Navigate back to the selected table in the nav history and pop the stack to that point.
+  # Use the qualifier that was specified when navigating to this table.
+  # Restore the page number the user was previously on for this table.
   def nav_back
     stack_idx = params[:index].to_i
     breadcrumb = self.breadcrumbs[stack_idx]              # get the current breadcrumb
     self.table_name = breadcrumb.table_name               # we want to go back to this table and its qualifier
     self.qualifier = breadcrumb.qualifier
     self.breadcrumbs = self.breadcrumbs[0..stack_idx]     # remove all the other items on the stack
+    self.force_page_num = breadcrumb.page_num
 
     redirect_to table_viewer_path+"/index"
   end
@@ -107,6 +114,19 @@ class TableViewerController < ApplicationController
     self.breadcrumbs = self.breadcrumbs.push(breadcrumb)
   end
 
+  # Updates the last breadcrumb in the stack with the current page number
+  # so we can restore the page number when navigating back to that table.
+  def update_page_num_of_current_breadcrumb(page_num)
+    self.breadcrumbs[-1].page_num = page_num
+  end
+
+  def restore_page_number_on_nav
+    if self.force_page_num
+      params[:page] = self.force_page_num
+      self.force_page_num = nil                   # clear the page number so it doesn't affect other navs.
+    end
+  end
+
   # Populates @parent_tables and @child_tables with the parent and child navigation options based on the FK's for
   # the specified table.
   def load_navigators(table_name)
@@ -129,7 +149,7 @@ class TableViewerController < ApplicationController
   # Returns an array of DynamicTable instances for the selected record indexes
   def get_selected_records(table_name, selected_record_indexes, qualifier)
     selected_records = []
-    records, fields = load_DDO(table_name, qualifier)         # get the records for the current page.
+    records, fields = load_DDO(table_name, self.last_page_num, qualifier)         # get the records for the current page.
 
     # indexes always start with 0 regardless of what page we're on.
     selected_record_indexes.each do |idx|
@@ -230,6 +250,7 @@ class TableViewerController < ApplicationController
   def navigating_to(table_name, qualifier)
     self.table_name = table_name
     self.qualifier = qualifier
+    update_page_num_of_current_breadcrumb(self.last_page_num)
     add_to_breadcrumb_trail(table_name, qualifier)
   end
 

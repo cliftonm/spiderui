@@ -42,15 +42,15 @@ module MyUtils
 
   # Loads the Dynamic Data Object with data and field names
   # Returns both the records and their field names.
-  def load_DDO(table_name, where = nil)
+  def load_DDO(table_name, page, where = nil)
     raise "Table name cannot be nil" if table_name.nil?
     table = DynamicTable.new
     table.set_table_data(table_name)
 
     if where
-      records = DynamicTable.where(where).paginate(page: params[:page], per_page: 25)
+      records = DynamicTable.where(where).paginate(page: page, per_page: 25)
     else
-      records = DynamicTable.paginate(page: params[:page], per_page: 25)
+      records = DynamicTable.paginate(page: page, per_page: 25)
     end
     fields = table.get_record_fields(records)
     return records, fields
