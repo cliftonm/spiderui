@@ -24,11 +24,21 @@ class TableViewerController < ApplicationController
     end
   end
 
+  # for debugging, clear all session information.
+  def clear_session
+    self.breadcrumbs = nil
+    self.table_name = nil
+    self.qualifier = nil
+
+    redirect_to :root
+  end
+
   # Respond to a user selecting a table.  We store the table name in the session and redirect to the index page.
   def view_table
     self.qualifier = nil   # clear out the current qualifier
     self.table_name = params[:table_name]
     create_breadcrumb_trail(params[:table_name])
+
     redirect_to table_viewer_path+"/index"
   end
 
@@ -48,28 +58,28 @@ class TableViewerController < ApplicationController
       # disallow composite FK navigation or allow only zero or one record to be selected to navigate to the parent data
       # in the case of a composite FK.
       qualifier = get_parent_qualifier(current_table, target_table, selected_records)
-    end
-
-    if params[:navigate_to_child]
+      navigating_to(target_table, qualifier)
+    elsif params[:navigate_to_child]
       target_table = params[:cbChildren]
       # If items in the current table are selected, then these are PK's.  The child table will have FK's to specific
       # PK columns.
       qualifier = get_child_qualifier(current_table, target_table, selected_records)
+      navigating_to(target_table, qualifier)
+    elsif params[:navigate_show_all]
+      # Show all records for the current navigation point
+      self.qualifier = nil
     end
 
-    self.table_name = target_table
-    self.qualifier = qualifier
-    add_to_breadcrumb_trail(target_table)
     redirect_to table_viewer_path+"/index"
   end
 
   # Navigate back to the selected table in the nav history and pop the stack to that point.
   def nav_back
-    # TODO: Restore the qualifier that was used to filter this navigation!
-    self.qualifier = nil   # clear out the current qualifier
     stack_idx = params[:index].to_i
-    self.table_name = self.breadcrumbs[stack_idx]
-    self.breadcrumbs = self.breadcrumbs[0..stack_idx]
+    breadcrumb = self.breadcrumbs[stack_idx]              # get the current breadcrumb
+    self.table_name = breadcrumb.table_name               # we want to go back to this table and its qualifier
+    self.qualifier = breadcrumb.qualifier
+    self.breadcrumbs = self.breadcrumbs[0..stack_idx]     # remove all the other items on the stack
 
     redirect_to table_viewer_path+"/index"
   end
@@ -88,12 +98,13 @@ class TableViewerController < ApplicationController
 
   # Create a breadcrumb trail array starting with the specified table.
   def create_breadcrumb_trail(table_name)
-    self.breadcrumbs = [table_name]
+    self.breadcrumbs = [Breadcrumb.new(table_name)]
   end
 
   # Add the specified table to the breadcrumb trail
-  def add_to_breadcrumb_trail(table_name)
-    self.breadcrumbs = self.breadcrumbs.push(table_name)
+  def add_to_breadcrumb_trail(table_name, qualifier)
+    breadcrumb = Breadcrumb.new(table_name, qualifier)
+    self.breadcrumbs = self.breadcrumbs.push(breadcrumb)
   end
 
   # Populates @parent_tables and @child_tables with the parent and child navigation options based on the FK's for
@@ -214,10 +225,17 @@ class TableViewerController < ApplicationController
     array
   end
 
+  # We are navigating to the specified table with the specified qualifier.
+  # Set the session info and add the new table and qualifier to the breadcrumb trail
+  def navigating_to(table_name, qualifier)
+    self.table_name = table_name
+    self.qualifier = qualifier
+    add_to_breadcrumb_trail(table_name, qualifier)
+  end
+
   # Return true if the field can be displayed.
   # All sorts of interesting things can be done here:
   #   Hide primary keys, ModifiedDate, rowguid, etc.
-
   helper_method :display_field?
   def display_field?(table_name, field_name)
     # '__rn' is something that will_paginate adds.

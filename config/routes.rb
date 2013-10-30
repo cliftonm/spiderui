@@ -1,5 +1,6 @@
 DatabaseSpider::Application.routes.draw do
   get "table_viewer/index"
+  get "table_viewer/clear_session" => "table_viewer#clear_session"
   root to: "table_viewer#index"
   get "table_viewer" => "table_viewer#view_table"
 
