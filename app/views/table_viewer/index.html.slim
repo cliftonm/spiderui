@@ -1,4 +1,5 @@
 =form_for @table_viewer do |f|
+  - @parent_tab_index = 0
   - # The navigation breadcrumbs
   .navigation_history
     p = "Nav History:"
@@ -18,34 +19,31 @@
               = link_to(table_viewer_path(table_name: table_name)) do
                 t #{table_name}
 
+  - # if we have a selected table and it has parent tables, show the parent tables.
+  - if !@table_name.nil? && @parent_tables.length > 0
+    .tab_region
+      .tabs
+        hr1
+        ul
+          - @parent_tables.each_with_index do |table_info, index|
+            li id="tab_tab#{index}"
+              a href="#" title="View #{table_info.name}" onclick="select_tab('tab_tab#{index}', 'tab_content#{index}')"
+                span = "#{table_info.name}"
+        hr2
+
+      - @parent_tables.each_with_index do |table_info, index|
+        .tab_content id="tab_content#{index}"
+          .tab_table_data_region
+            = render "table_data", records: @records
+
+    javascript:
+      select_tab("tab_tab#{@parent_tab_index}", "tab_content#{@parent_tab_index}")
+
   - # The selected table data
   - if !@table_name.nil?
     .table_data_region
       p #{@table_name}
-      .table_data
-        table
-          - # Display header
-          tr
-            - # Dummy header column for checkbox
-            th
-
-            - # Header of field names
-            - visible_fields.each do |field_name|
-              th = field_name
-
-          - # Display records
-          - @records.each do |record|
-            tr class=cycle('row0', 'row1')
-              td
-                - # __idx is added by the controller to uniquely identify a record.
-                = check_box_tag 'selected_records[]', record["__idx"]
-              - visible_fields.each_with_index do |field_name, field_index|
-                - if field_index == visible_fields.length - 1
-                  td.last = fix_encoding(record[field_name])
-                - else
-                  td = fix_encoding(record[field_name])
-      .digg_pagination
-        = will_paginate @records
+      = render "table_data", records: @records
 
     - # table navigation
     .navigation

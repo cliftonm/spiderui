@@ -3,6 +3,7 @@
 
 .table_list_region
   width: 240px
+  height: 700px
   float: left
   p
     text-align: left
@@ -12,12 +13,12 @@
   text-align: left
   border: 1px solid
   border-radius: 3px
-  width: 240px
-  height: 600px
+  width: 100%
+  height: 100%
   line-height: 1.5em
   ul
     width: 190px
-    height: 580px
+    height: 99%
     overflow: auto
     margin-top: 2px
     li
@@ -34,41 +35,54 @@
 .table_data_region
   float: left
   width: 600px
-  height: 600px
+  height: 500px
   padding-left: 20px
   p
     text-align: center
     margin-bottom: 2px
-  .table_data
-    width: 100%
-    height: 100%
-    overflow: auto
-    border: 1px solid
-    table
-      font-family: Verdana, Arial, sans-serif
-      line-height: 1.5em
-      font-size: 10pt
-      border-collapse: collapse
-      th
-        padding-left: 5px
-        padding-right: 5px
-      td
-        border-left: 1px solid #d0d0d0
-        white-space: nowrap
-        padding-left: 5px
-        padding-right: 5px
-      td.last                                  // the last column fills any remaining space
-        width: 100%
-      tr                                       // the header row
-        background-color: #e0e0ff
-      tr.row0                                  // alternating row colors
-        background-color: #ffffff
-      tr.row1
-        background-color: #ddffdd
+
+.tab_table_data_region
+  float: left
+  width: 100%
+  height: 100%
+  padding-left: 20px
+  margin-bottom: 20px
+  p
+    text-align: center
+    margin-bottom: 2px
+
+
+.table_data
+  width: 100%
+  height: 100%
+  overflow: auto
+  border: 1px solid
+  table
+    font-family: Verdana, Arial, sans-serif
+    line-height: 1.5em
+    font-size: 10pt
+    border-collapse: collapse
+    th
+      padding-left: 5px
+      padding-right: 5px
+    td
+      border-left: 1px solid #d0d0d0
+      white-space: nowrap
+      padding-left: 5px
+      padding-right: 5px
+    td.last                                  // the last column fills any remaining space
+      width: 100%
+    tr                                       // the header row
+      background-color: #e0e0ff
+    tr.row0                                  // alternating row colors
+      background-color: #ffffff
+    tr.row1
+      background-color: #ddffdd
 
 .navigation_history
-  width: 1024px
+  width: 100%
   float: left
+  margin-bottom: 20px
   p
     margin-bottom: 0px
   a.button
@@ -102,13 +116,13 @@
     
 .navigation
   float: left
-  width: 200px
-  height: 600px
+  width: 240px
+  height: 490px
   padding-top: 23px
   padding-left: 20px
   fieldset
-    width: 240px
-    height: 592px
+    width: 100%
+    height: 100%
     /* Separate div because 'Go' buttons are left padded. */
     .nav_options
       select
@@ -224,3 +238,71 @@
     margin-right: 1em
   .next_page
     margin-left: 1em
+
+/* Tabs */
+.tab_region
+  width: 880px
+  height: 200px
+  float: left
+  margin-bottom: 60px
+  .tab_content
+    width: 100%
+    heigh: 100%
+
+.tabs
+  width: 100%
+  background: #FFFFFF
+  float: left
+  padding-bottom: 8px
+  hr1
+    float: left
+    color: #e0e0e0
+    background: #e0e0e0
+    width: 20px
+    height: 5px
+    margin-top: 17px
+  hr2
+    float: left
+    color: #e0e0e0
+    background: #e0e0e0
+    width: 100px            /* How do I fill in the reset of tab div with the horizontal line? */
+    height: 5px
+    margin-top: 17px
+  ul
+    margin: 0px
+    padding: 0px
+    list-style: none
+  li
+    display: inline
+    margin: 0px
+    padding: 0px
+  a
+    float: left
+    background: url('tabsRight.gif') no-repeat right top
+    border-bottom: 1px solid #84B0C7
+    font-family: Arial,Helvetica,sans serif
+    font-weight: 500
+    font-size: 11pt
+    text-decoration: none
+    &:hover
+      background-position: 100% -150px
+    &:link, &:visited, &:active, &:hover
+      color: #336699
+  span
+    float: left
+    display: block
+    background: url('tabsLeft.gif') no-repeat left top
+    padding: 3px 7px
+    white-space: nowrap
+    float: none
+  a:hover span
+    background-position: 0% -150px
+  li.current
+    a
+      background-position: 100% -150px
+      border-width: 0px
+      color: #000066
+    span
+      background-position: 0% -150px
+      padding-bottom: 2px
+

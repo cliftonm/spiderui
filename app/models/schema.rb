@@ -45,6 +45,8 @@ class Schema
     array
   end
 
+  # Convert the array of records from the TinyTDS query into an array of hashes, where
+  # the keys are the field names.
   def self.convert_to_array_of_hashes(fields, records)
     array = []
     records.each { |record|
