@@ -1,4 +1,5 @@
 .table_data
+  - visible_fields = get_visible_fields(data_table)
   table
     - # Display header
     tr
@@ -10,7 +11,7 @@
         th = field_name
 
     - # Display records
-    - records.each do |record|
+    - data_table.records.each do |record|
       tr class=cycle('row0', 'row1')
         td
           - # __idx is added by the controller to uniquely identify a record.
@@ -21,4 +22,4 @@
           - else
             td = fix_encoding(record[field_name])
 .digg_pagination
-  = will_paginate records
+  = will_paginate data_table.records, param_name: data_table.table_name

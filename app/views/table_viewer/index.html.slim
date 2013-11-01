@@ -34,7 +34,7 @@
       - @parent_tables.each_with_index do |table_info, index|
         .tab_content id="tab_content#{index}"
           .tab_table_data_region
-            = render "table_data", records: @records
+            = render "table_data", data_table: @parent_dataset[index]
 
     javascript:
       select_tab("tab_tab#{@parent_tab_index}", "tab_content#{@parent_tab_index}")
@@ -42,8 +42,8 @@
   - # The selected table data
   - if !@table_name.nil?
     .table_data_region
-      p #{@table_name}
-      = render "table_data", records: @records
+      p #{@data_table.table_name}
+      = render "table_data", data_table: @data_table
 
     - # table navigation
     .navigation

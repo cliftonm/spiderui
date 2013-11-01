@@ -1,10 +1,10 @@
 include MyUtils
 
 class TableViewerController < ApplicationController
-  attr_reader :records
-  attr_reader :fields
+  attr_reader :data_table
   attr_reader :parent_tables
   attr_reader :child_tables
+  attr_reader :parent_dataset
 
   attr_session_accessor :table_name
   attr_session_accessor :qualifier
@@ -22,9 +22,10 @@ class TableViewerController < ApplicationController
     if self.table_name
       restore_page_number_on_nav                  # restores the page number when navigating back along the breadcrumbs
       self.last_page_num = params[:page]          # preserve the page number so selected navigation records are selected from the correct page.
-      @records, @fields = load_DDO(self.table_name, self.last_page_num, self.qualifier)
-      add_hidden_index_values(@records, @fields)
+      @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier)
+      add_hidden_index_values(@data_table)
       load_navigators(self.table_name)
+      @parent_dataset = load_parent_tables(@parent_tables)
     end
   end
 
@@ -138,10 +139,26 @@ class TableViewerController < ApplicationController
     @child_tables = format_for_combo_box(children, :SchemaName, :TableName)
   end
 
+  # Given an array of parent tables (OpenStruct with id and name properties), return an array of OpenStruct(records, fields)
+  # of data for each parent table.
+  def load_parent_tables(parent_tables)
+    parent_dataset = []
+
+    parent_tables.each do |parent_table|
+      # TODO: can't ignore page numbers forever
+      # TODO: can't ignore the qualifier forever either
+      parent_data_table = load_DDO(parent_table.name)
+      parent_dataset << parent_data_table
+    end
+
+    parent_dataset
+  end
+
+
   # Add hidden index values so we can identify uniquely selected rows in 'post'
-  def add_hidden_index_values(records, fields)
-    fields << '__idx'
-    records.each_with_index do |record, index|
+  def add_hidden_index_values(data_table)
+    data_table.fields << '__idx'
+    data_table.records.each_with_index do |record, index|
       record["__idx"] = index
     end
   end
@@ -149,11 +166,11 @@ class TableViewerController < ApplicationController
   # Returns an array of DynamicTable instances for the selected record indexes
   def get_selected_records(table_name, selected_record_indexes, qualifier)
     selected_records = []
-    records, fields = load_DDO(table_name, self.last_page_num, qualifier)         # get the records for the current page.
+    data_table = load_DDO(table_name, self.last_page_num, qualifier)         # get the records for the current page.
 
     # indexes always start with 0 regardless of what page we're on.
     selected_record_indexes.each do |idx|
-      selected_records << records[idx.to_i]
+      selected_records << data_table.records[idx.to_i]
     end
 
     selected_records
@@ -274,8 +291,8 @@ class TableViewerController < ApplicationController
   end
 
   # Returns only the visible fields
-  helper_method :visible_fields
-  def visible_fields
-    fields.keep_if {|f| display_field?(self.table_name, f)}
+  helper_method :get_visible_fields
+  def get_visible_fields(data_table)
+    data_table.fields.keep_if {|f| display_field?(data_table.table_name, f)}
   end
 end

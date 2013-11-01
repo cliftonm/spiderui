@@ -41,8 +41,8 @@ module MyUtils
   end
 
   # Loads the Dynamic Data Object with data and field names
-  # Returns both the records and their field names.
-  def load_DDO(table_name, page, where = nil)
+  # Returns a DataTable instance
+  def load_DDO(table_name, page = 1, where = nil)
     raise "Table name cannot be nil" if table_name.nil?
     table = DynamicTable.new
     table.set_table_data(table_name)
@@ -53,7 +53,8 @@ module MyUtils
       records = DynamicTable.paginate(page: page, per_page: 25)
     end
     fields = table.get_record_fields(records)
-    return records, fields
+
+    return DataTable.new(table_name, records, fields)
   end
 
   # Given two arrays of equal length, 'keys' and 'values', returns a hash of key => value
