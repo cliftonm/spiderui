@@ -22,4 +22,4 @@
           - else
             td = fix_encoding(record[field_name])
 .digg_pagination
-  = will_paginate data_table.records, param_name: data_table.table_name
+  = will_paginate data_table.records, param_name: data_table.table_name+"_page", params: {selected_parent_table_index: data_table.index }

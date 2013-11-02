@@ -11,6 +11,7 @@ class TableViewerController < ApplicationController
   attr_session_accessor :breadcrumbs
   attr_session_accessor :last_page_num
   attr_session_accessor :force_page_num
+  attr_session_accessor :model_page_nums    # dictionary of page numbers for all the models being displayed.
 
   # The main page.
   # If a :table_name exists in the session, then the table data is loaded and displayed, as well as the
@@ -18,14 +19,17 @@ class TableViewerController < ApplicationController
   def index
     # constants that never change for the database (unless of course the DB schema itself changes)
     initialize_attributes
+    update_model_page_numbers
 
     if self.table_name
-      restore_page_number_on_nav                  # restores the page number when navigating back along the breadcrumbs
-      self.last_page_num = params[:page]          # preserve the page number so selected navigation records are selected from the correct page.
-      @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier)
+      restore_page_number_on_nav                                    # restores the page number when navigating back along the breadcrumbs
+      self.last_page_num = self.model_page_nums[self.table_name+'_page']          # preserve the page number so selected navigation records are selected from the correct page.
+      @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier, 20)
       add_hidden_index_values(@data_table)
       load_navigators(self.table_name)
       @parent_dataset = load_parent_tables(@parent_tables)
+      # Update the parent tab index based on the existence and value of the selected_parent_table_index parameter
+      update_parent_child_tab_indices
     end
   end
 
@@ -34,13 +38,15 @@ class TableViewerController < ApplicationController
     self.breadcrumbs = nil
     self.table_name = nil
     self.qualifier = nil
+    self.model_page_nums = nil
 
     redirect_to :root
   end
 
   # Respond to a user selecting a table.  We store the table name in the session and redirect to the index page.
   def view_table
-    self.qualifier = nil   # clear out the current qualifier
+    self.qualifier = nil        # clear out the current qualifier
+    self.model_page_nums = {}   # clear the page numbers being displayed for all the models.
     self.table_name = params[:table_name]
     create_breadcrumb_trail(params[:table_name])
 
@@ -94,6 +100,26 @@ class TableViewerController < ApplicationController
 
   private
 
+  # stores the selected parent table index if the selected_parent_table_index exists.  It will exist
+  # when the paginator is used.
+  def update_parent_child_tab_indices
+      @parent_tab_index = params[:selected_parent_table_index].to_i if params[:selected_parent_table_index]
+      @parent_tab_index ||= 0     # if it doesn't exist, set it to 0.
+  end
+
+  # If the user clicked on a page number, update the model-pagenum dictionary to reflect the new page number
+  # that the user has clicked on.  All page number params are of the format [schema].[table_name]_[page_number]
+  def update_model_page_numbers
+    model_page_nums = self.model_page_nums
+    page_num_keys = params.select { |k, v| k =~/^[a-zA-Z0-9]+.[a-zA-Z0-9]+_page$/}
+
+    page_num_keys.each do |page_num_key|
+      model_page_nums[page_num_key[0]] = page_num_key[1]
+    end
+
+    self.model_page_nums = model_page_nums
+  end
+
   # Initialize attributes, assuming no table is selected and no navigation possible.
   def initialize_attributes
     @table_viewer = DynamicTable.new
@@ -144,10 +170,12 @@ class TableViewerController < ApplicationController
   def load_parent_tables(parent_tables)
     parent_dataset = []
 
-    parent_tables.each do |parent_table|
+    parent_tables.each_with_index do |parent_table, index|
       # TODO: can't ignore page numbers forever
       # TODO: can't ignore the qualifier forever either
-      parent_data_table = load_DDO(parent_table.name)
+      parent_data_table = load_DDO(parent_table.name, self.model_page_nums[parent_table.name+'_page'], nil, 8)
+      # Preserve the index so we can select the tab again when the page refreshes
+      parent_data_table.index = index
       parent_dataset << parent_data_table
     end
 

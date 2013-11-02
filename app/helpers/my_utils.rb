@@ -42,15 +42,16 @@ module MyUtils
 
   # Loads the Dynamic Data Object with data and field names
   # Returns a DataTable instance
-  def load_DDO(table_name, page = 1, where = nil)
+  def load_DDO(table_name, page = nil, where = nil, items_per_page = 25)
     raise "Table name cannot be nil" if table_name.nil?
     table = DynamicTable.new
     table.set_table_data(table_name)
+    page ||= 1                  # page is 1 if nil
 
     if where
-      records = DynamicTable.where(where).paginate(page: page, per_page: 25)
+      records = DynamicTable.where(where).paginate(page: page, per_page: items_per_page)
     else
-      records = DynamicTable.paginate(page: page, per_page: 25)
+      records = DynamicTable.paginate(page: page, per_page: items_per_page)
     end
     fields = table.get_record_fields(records)
 

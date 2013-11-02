@@ -1,5 +1,4 @@
 =form_for @table_viewer do |f|
-  - @parent_tab_index = 0
   - # The navigation breadcrumbs
   .navigation_history
     p = "Nav History:"
@@ -22,15 +21,17 @@
   - # if we have a selected table and it has parent tables, show the parent tables.
   - if !@table_name.nil? && @parent_tables.length > 0
     .tab_region
-      .tabs
-        hr1
-        ul
-          - @parent_tables.each_with_index do |table_info, index|
-            li id="tab_tab#{index}"
-              a href="#" title="View #{table_info.name}" onclick="select_tab('tab_tab#{index}', 'tab_content#{index}')"
-                span = "#{table_info.name}"
-        hr2
+      .tab_list
+        table
+          tr
+            - @parent_tables.each_with_index do |table_info, index|
+              td id="tab_tab#{index}"
+                a href="#" title="View #{table_info.name}" onclick="select_tab('tab_tab#{index}', 'tab_content#{index}')"
+                  span = "#{table_info.name}"
 
+
+      - # table_info isn't used because this data is formatted for the comboboxes.
+      - # What we're actually simply interested in here is the index.
       - @parent_tables.each_with_index do |table_info, index|
         .tab_content id="tab_content#{index}"
           .tab_table_data_region
