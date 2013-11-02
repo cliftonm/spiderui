@@ -5,6 +5,7 @@ class TableViewerController < ApplicationController
   attr_reader :parent_tables
   attr_reader :child_tables
   attr_reader :parent_dataset
+  attr_reader :child_dataset
 
   attr_session_accessor :table_name
   attr_session_accessor :qualifier
@@ -28,6 +29,7 @@ class TableViewerController < ApplicationController
       add_hidden_index_values(@data_table)
       load_navigators(self.table_name)
       @parent_dataset = load_parent_tables(@parent_tables)
+      @child_dataset = load_child_tables(@child_tables)
       # Update the parent tab index based on the existence and value of the selected_parent_table_index parameter
       update_parent_child_tab_indices
     end
@@ -104,6 +106,8 @@ class TableViewerController < ApplicationController
   def update_parent_child_tab_indices
       @parent_tab_index = params[:selected_parent_table_index].to_i if params[:selected_parent_table_index]
       @parent_tab_index ||= 0     # if it doesn't exist, set it to 0.
+      @child_tab_index = params[:selected_child_table_index].to_i if params[:selected_child_table_index]
+      @child_tab_index ||= 0     # if it doesn't exist, set it to 0.
   end
 
   # If the user clicked on a page number, update the model-pagenum dictionary to reflect the new page number
@@ -164,7 +168,7 @@ class TableViewerController < ApplicationController
     @child_tables = format_for_combo_box(children, :SchemaName, :TableName)
   end
 
-  # Given an array of parent tables (OpenStruct with id and name properties), return an array of OpenStruct(records, fields)
+  # Given an array of parent tables (OpenStruct with id and name properties), return an array of DataTables
   # of data for each parent table.
   def load_parent_tables(parent_tables)
     parent_dataset = []
@@ -181,6 +185,22 @@ class TableViewerController < ApplicationController
     parent_dataset
   end
 
+  # Given an array of child tables (OpenStruct with id and name properties), return an array of DataTables
+  # of data for each parent table.
+  def load_child_tables(child_tables)
+    child_dataset = []
+
+    child_tables.each_with_index do |child_table, index|
+      # TODO: can't ignore page numbers forever
+      # TODO: can't ignore the qualifier forever either
+      child_data_table = load_DDO(child_table.name, self.model_page_nums[child_table.name+'_page'], nil, 7)
+      # Preserve the index so we can select the tab again when the page refreshes
+      child_data_table.index = index
+      child_dataset << child_data_table
+    end
+
+    child_dataset
+  end
 
   # Add hidden index values so we can identify uniquely selected rows in 'post'
   def add_hidden_index_values(data_table)

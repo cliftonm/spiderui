@@ -1,0 +1,25 @@
+.table_data
+  - visible_fields = get_visible_fields(data_table)
+  table
+    - # Display header
+    tr
+      - # Dummy header column for checkbox
+      th
+
+      - # Header of field names
+      - visible_fields.each do |field_name|
+        th = field_name
+
+    - # Display records
+    - data_table.records.each do |record|
+      tr class=cycle('row0', 'row1')
+        td
+          - # __idx is added by the controller to uniquely identify a record.
+          = check_box_tag 'selected_records[]', record["__idx"]
+        - visible_fields.each_with_index do |field_name, field_index|
+          - if field_index == visible_fields.length - 1
+            td.last = fix_encoding(record[field_name])
+          - else
+            td = fix_encoding(record[field_name])
+.digg_pagination
+  = will_paginate data_table.records, param_name: data_table.table_name+"_page", params: {selected_child_table_index: data_table.index }

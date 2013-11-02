@@ -25,26 +25,23 @@
         table
           tr
             - @parent_tables.each_with_index do |table_info, index|
-              td id="tab_tab#{index}"
-                a href="#" title="View #{table_info.name}" onclick="select_tab('tab_tab#{index}', 'tab_content#{index}')"
+              td id="parent_tab#{index}"
+                a href="#" title="View #{table_info.name}" onclick="select_parent_tab('parent_tab#{index}', 'parent_tab_content#{index}')"
                   span = "#{table_info.name}"
 
 
       - # table_info isn't used because this data is formatted for the comboboxes.
       - # What we're actually simply interested in here is the index.
       - @parent_tables.each_with_index do |table_info, index|
-        .tab_content id="tab_content#{index}"
+        .tab_content id="parent_tab_content#{index}"
           .tab_table_data_region
             = render "table_data", data_table: @parent_dataset[index]
-
-    javascript:
-      select_tab("tab_tab#{@parent_tab_index}", "tab_content#{@parent_tab_index}")
 
   - # The selected table data
   - if !@table_name.nil?
     .table_data_region
       p #{@data_table.table_name}
-      = render "table_data", data_table: @data_table
+      = render "parent_table_data", data_table: @data_table
 
     - # table navigation
     .navigation
@@ -61,3 +58,27 @@
           br Navigate to child:
           = select_tag "cbChildren", options_from_collection_for_select(@child_tables, 'id', 'name')
           = f.submit("Go", name: 'navigate_to_child')
+
+  - # if we have a selected table and it has child tables, show the child tables.
+  - if !@table_name.nil? && @child_tables.length > 0
+    .tab_region
+      .tab_list
+        table
+          tr
+            - @child_tables.each_with_index do |table_info, index|
+              td id="child_tab#{index}"
+                a href="#" title="View #{table_info.name}" onclick="select_child_tab('child_tab#{index}', 'child_tab_content#{index}')"
+                  span = "#{table_info.name}"
+
+
+      - # table_info isn't used because this data is formatted for the comboboxes.
+      - # What we're actually simply interested in here is the index.
+      - @child_tables.each_with_index do |table_info, index|
+        .tab_content id="child_tab_content#{index}"
+          .tab_table_data_region
+            = render "child_table_data", data_table: @child_dataset[index]
+
+javascript:
+  select_parent_tab("parent_tab#{@parent_tab_index}", "parent_tab_content#{@parent_tab_index}")
+  select_child_tab("child_tab#{@child_tab_index}", "child_tab_content#{@child_tab_index}")
+
