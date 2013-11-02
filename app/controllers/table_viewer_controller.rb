@@ -1,5 +1,8 @@
 include MyUtils
 
+MAIN_TABLE_ROWS = 20
+FK_ROWS = 7
+
 class TableViewerController < ApplicationController
   attr_reader :data_table
   attr_reader :parent_tables
@@ -25,11 +28,11 @@ class TableViewerController < ApplicationController
     if self.table_name
       restore_page_number_on_nav                                    # restores the page number when navigating back along the breadcrumbs
       self.last_page_num = self.model_page_nums[self.table_name+'_page']          # preserve the page number so selected navigation records are selected from the correct page.
-      @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier, 20)
+      @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier, MAIN_TABLE_ROWS)
       add_hidden_index_values(@data_table)
       load_navigators(self.table_name)
-      @parent_dataset = load_parent_tables(@parent_tables)
-      @child_dataset = load_child_tables(@child_tables)
+      @parent_dataset = load_fk_tables(@parent_tables)
+      @child_dataset = load_fk_tables(@child_tables)
       # Update the parent tab index based on the existence and value of the selected_parent_table_index parameter
       update_parent_child_tab_indices
     end
@@ -59,11 +62,11 @@ class TableViewerController < ApplicationController
   # We store the appropriate table name in the session and redirect to the index page.
   def post
     current_table = self.table_name
-    selected_records = []
-    selected_records = get_selected_records(self.table_name, params[:selected_records], self.qualifier) if params[:selected_records]
 
     if params[:navigate_to_parent]
       target_table = params[:cbParents]
+      selected_records = []
+      selected_records = get_selected_records(self.table_name, params[:selected_records], self.qualifier) if params[:selected_records]
       # If items in the current table are selected, then these are FK's to the parent table.
       # While this is straight forward if there is one FK column (we can use a "where PK in ()" clause),
       # for composite FK's this probably requires individual queries.  For the moment, we can either
@@ -73,6 +76,8 @@ class TableViewerController < ApplicationController
       navigating_to(target_table, qualifier)
     elsif params[:navigate_to_child]
       target_table = params[:cbChildren]
+      selected_records = []
+      selected_records = get_selected_records(self.table_name, params[:selected_records], self.qualifier) if params[:selected_records]
       # If items in the current table are selected, then these are PK's.  The child table will have FK's to specific
       # PK columns.
       qualifier = get_child_qualifier(current_table, target_table, selected_records)
@@ -168,38 +173,21 @@ class TableViewerController < ApplicationController
     @child_tables = format_for_combo_box(children, :SchemaName, :TableName)
   end
 
-  # Given an array of parent tables (OpenStruct with id and name properties), return an array of DataTables
-  # of data for each parent table.
-  def load_parent_tables(parent_tables)
-    parent_dataset = []
+  # Given an array of fk (parents or children) tables (OpenStruct with id and name properties), return an array of DataTables
+  # of data for each parent/child table.
+  def load_fk_tables(tables)
+    dataset = []
 
-    parent_tables.each_with_index do |parent_table, index|
+    tables.each_with_index do |table, index|
       # TODO: can't ignore page numbers forever
       # TODO: can't ignore the qualifier forever either
-      parent_data_table = load_DDO(parent_table.name, self.model_page_nums[parent_table.name+'_page'], nil, 7)
+      data_table = load_DDO(table.name, self.model_page_nums[table.name+'_page'], nil, FK_ROWS)
       # Preserve the index so we can select the tab again when the page refreshes
-      parent_data_table.index = index
-      parent_dataset << parent_data_table
+      data_table.index = index
+      dataset << data_table
     end
 
-    parent_dataset
-  end
-
-  # Given an array of child tables (OpenStruct with id and name properties), return an array of DataTables
-  # of data for each parent table.
-  def load_child_tables(child_tables)
-    child_dataset = []
-
-    child_tables.each_with_index do |child_table, index|
-      # TODO: can't ignore page numbers forever
-      # TODO: can't ignore the qualifier forever either
-      child_data_table = load_DDO(child_table.name, self.model_page_nums[child_table.name+'_page'], nil, 7)
-      # Preserve the index so we can select the tab again when the page refreshes
-      child_data_table.index = index
-      child_dataset << child_data_table
-    end
-
-    child_dataset
+    dataset
   end
 
   # Add hidden index values so we can identify uniquely selected rows in 'post'

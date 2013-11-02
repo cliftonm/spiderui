@@ -1,38 +1,12 @@
-function select_parent_tab(tab, tab_content) {
-    $("td[id='parent_tab0']").removeClass('current')
-    $("td[id='parent_tab1']").removeClass('current')
-    $("td[id='parent_tab2']").removeClass('current')
-    $("td[id='parent_tab3']").removeClass('current')
-    $("td[id='parent_tab4']").removeClass('current')
-    $("td[id='parent_tab5']").removeClass('current')
-    $("td[id='parent_tab6']").removeClass('current')
-    $("div[id='parent_tab_content0']").hide()
-    $("div[id='parent_tab_content1']").hide()
-    $("div[id='parent_tab_content2']").hide()
-    $("div[id='parent_tab_content3']").hide()
-    $("div[id='parent_tab_content4']").hide()
-    $("div[id='parent_tab_content5']").hide()
-    $("div[id='parent_tab_content6']").hide()
-    $("td[id='" + tab + "']").addClass('current')
-    $("div[id='" + tab_content + "']").show()
-}
-
-function select_child_tab(tab, tab_content) {
-    $("td[id='child_tab0']").removeClass('current')
-    $("td[id='child_tab1']").removeClass('current')
-    $("td[id='child_tab2']").removeClass('current')
-    $("td[id='child_tab3']").removeClass('current')
-    $("td[id='child_tab4']").removeClass('current')
-    $("td[id='child_tab5']").removeClass('current')
-    $("td[id='child_tab6']").removeClass('current')
-    $("div[id='child_tab_content0']").hide()
-    $("div[id='child_tab_content1']").hide()
-    $("div[id='child_tab_content2']").hide()
-    $("div[id='child_tab_content3']").hide()
-    $("div[id='child_tab_content4']").hide()
-    $("div[id='child_tab_content5']").hide()
-    $("div[id='child_tab_content6']").hide()
-    $("td[id='" + tab + "']").addClass('current')
-    $("div[id='" + tab_content + "']").show()
+/* Deselect all the parent tabs and hide all the content, then select the specified tab */
+function select_fk_tab(tab_selector, content_selector, index, num_tabs)
+{
+    for (var i=0; i<num_tabs; i++)
+    {
+        $(tab_selector + i.toString()).removeClass('current');
+        $(content_selector + i.toString()).hide();
+    }
+    $(tab_selector + index.toString()).addClass('current');
+    $(content_selector + index.toString()).show();
 }
 

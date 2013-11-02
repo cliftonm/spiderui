@@ -37,7 +37,7 @@
   width: 600px
   height: 480px
   padding-left: 20px
-  margin-bottom: 100px
+  margin-bottom: 80px         /* affects vertical placement of the child_table_region */
   p
     text-align: center
     margin-bottom: 2px
@@ -52,6 +52,10 @@
     text-align: center
     margin-bottom: 2px
 
+/* left margin to indent child tables section */
+.child_table_region
+  float: left
+  margin-left: 235px
 
 .table_data
   width: 100%
@@ -282,6 +286,7 @@
           padding: 3px 7px
           white-space: nowrap
           float: none
+          cursor: pointer                     /* Use a pointer cursor rather than the default, which is an i-beam */
         a:hover span
           background-position: 0% -150px
       td.current

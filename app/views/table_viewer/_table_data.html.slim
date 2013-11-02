@@ -1,3 +1,5 @@
+- # render for table data.  The paginator is separate because it requires additional parameters that are specific
+- # to the data being paginated.
 .table_data
   - visible_fields = get_visible_fields(data_table)
   table
@@ -17,9 +19,8 @@
           - # __idx is added by the controller to uniquely identify a record.
           = check_box_tag 'selected_records[]', record["__idx"]
         - visible_fields.each_with_index do |field_name, field_index|
+          - # Extends the last column out to the right edge of the table.
           - if field_index == visible_fields.length - 1
             td.last = fix_encoding(record[field_name])
           - else
             td = fix_encoding(record[field_name])
-.digg_pagination
-  = will_paginate data_table.records, param_name: data_table.table_name+"_page", params: {selected_parent_table_index: data_table.index }
