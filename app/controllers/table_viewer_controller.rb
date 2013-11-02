@@ -59,7 +59,6 @@ class TableViewerController < ApplicationController
     current_table = self.table_name
     selected_records = []
     selected_records = get_selected_records(self.table_name, params[:selected_records], self.qualifier) if params[:selected_records]
-    qualifier = nil         # assume no qualifier
 
     if params[:navigate_to_parent]
       target_table = params[:cbParents]
@@ -173,7 +172,7 @@ class TableViewerController < ApplicationController
     parent_tables.each_with_index do |parent_table, index|
       # TODO: can't ignore page numbers forever
       # TODO: can't ignore the qualifier forever either
-      parent_data_table = load_DDO(parent_table.name, self.model_page_nums[parent_table.name+'_page'], nil, 8)
+      parent_data_table = load_DDO(parent_table.name, self.model_page_nums[parent_table.name+'_page'], nil, 7)
       # Preserve the index so we can select the tab again when the page refreshes
       parent_data_table.index = index
       parent_dataset << parent_data_table
