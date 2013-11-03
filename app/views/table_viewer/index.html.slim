@@ -50,10 +50,12 @@
     - # table navigation
     .navigation
       fieldset
-        legend Navigation:
+        legend View and Navigation:
         br
-        = f.submit("Show All Records", name: 'navigate_show_all')
-        br
+        .nav_button
+          = f.submit("Show All Records", name: 'navigate_show_all')
+        .nav_button
+          = f.submit("Qualify By Selection", name: 'qualify_by_selection')
         - # Separate div because 'Go' buttons are left padded.
         .nav_options
           br Navigate to parent:

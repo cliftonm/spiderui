@@ -1,4 +1,4 @@
-/* Deselect all the parent tabs and hide all the content, then select the specified tab */
+/* Deselect all the parent tabs and hide all the content, then select the specified tab and show the desired content */
 function select_fk_tab(tab_selector, content_selector, index, num_tabs)
 {
     for (var i=0; i<num_tabs; i++)
