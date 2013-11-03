@@ -10,13 +10,330 @@
 <h1>Day 1: Spider Database Website</h1>
 <img border="0" src="screenshot-small.png" width="521" height="511"></p>
 <h2>In The Beginning...</h2>
-<p>&quot;In the beginning of creation, when Marc made the database UI, the website 
+<p><i>&quot;In the beginning of creation, when Marc made the website, the website 
 was without form and void, with darkness over the face of the HTML, and a mighty 
 script that swept over the surface of the IDE.&nbsp; Marc said, 'Let there be a 
 database spider UI', and there was a database spider UI; and Marc saw that the 
 UI was good, and he separated primary keys from foreign keys.&nbsp; He called 
 the foreign keys parent/child relationships, and the darkness Ruby on Rails.&nbsp; 
-So evening came, and morning came, the first day.&quot;</p>
+So evening came, and morning came, the first day.&quot;</i></p>
+<p>I've been wanting to create a database navigator, what a friend of mine 
+termed a &quot;Spider UI&quot;, for quite some time now.&nbsp; I originally wrote an 
+implementation in WinForms for an Oracle database but that never went as far as 
+I wanted it to go.&nbsp; Currently, I'm working a lot with Ruby on Rails and 
+also encountered a couple layers called <a href="http://slim-lang.com/">Slim</a> 
+(&quot;a lightweight templating engine&quot;) and <a href="http://sass-lang.com/">Sass</a> 
+(&quot;Syntactically Awesome Style Sheets&quot;) in another project.&nbsp; Wanting to 
+learn more about how Slim and Sass work together, I came up with this project 
+idea.&nbsp; In its full glory, I'm wanting to add all sorts of interesting 
+features, such as custom layout for editing, but first, I wanted to get some 
+basic functionality in place first.&nbsp; </p>
+<p>Internally, the website must support:</p>
+<ul>
+	<li>Connect to SQL Server (yes, Ruby on Rails can connect to SQL Server.)</li>
+	<li>Use a separate database for session and other metadata store, leaving 
+	the database we're connecting to for navigation untouched.</li>
+<li>Rather than physical Models for each table, implement a dynamic Model. </li>
+<li>Dynamic discovery of user tables and foreign key relationships by inspecting 
+the database schema rather than relying on the Rails application schema (which 
+would be otherwise generated from concrete Models backed by physical tables.)</li>
+</ul>
+<p>The user interface must support:</p>
+<ul>
+	<li>Selecting a table from a list</li>
+	<li>Viewing the data for that table</li>
+	<li>Selecting parent and child tables to navigate to</li>
+	<li>Selecting records to qualify navigation and display of parent/child 
+	records</li>
+	<li>Pagination</li>
+	<li>Breadcrumb trail of parent/child navigation</li>
+</ul>
+<p>What I'm leaving for &quot;Day 2&quot; are several metadata features:</p>
+<ul>
+	<li>Replacing foreign key ID's with &quot;display field&quot; lookups.</li>
+<li>Describing the display fields in a lookup table to use when resolving 
+foreign keys.</li>
+<li>Specifying fields that need not be displayed.</li>
+</ul>
+<p>&quot;Day 3&quot; will consist of supporting:</p>
+<ul>
+	<li>type-based automated generation of UI's to edit table data.</li>
+	<li>custom record editing templates.</li>
+</ul>
+<p>&quot;Day 4&quot; will consist of:</p>
+<ul>
+	<li>views (described in metadata as opposed to database-side views), as 
+	creating views with full schema information is required.</li>
+<li>creating SQL statements to support transactions on views</li>
+</ul>
+<p>What comes after that will probably involve the support of custom processing 
+of data during transactions (both code and PL/SQL calls) using Ruby as well as 
+server-side triggers on transactions.&nbsp; We'll see!</p>
+<h3>If Your New To Ruby on Rails</h3>
+<p>Code Project is primarily (at the time of this writing!) a site for all 
+things Microsoft, so if this is the first time you're encountering Ruby on 
+Rails, I'd recommend reading through some of my other articles on the Ruby 
+language and Ruby on Rails:</p>
+<ul>
+	<li>
+	<a href="http://www.codeproject.com/Articles/551579/Csharp-and-Ruby-Classes">
+	C# and Ruby Classes</a></li>
+	<li>
+	<a href="http://www.codeproject.com/Articles/491362/Comparing-Ruby-and-Csharp-Performance">
+	Comparing Ruby and C# Performance</a></li>
+	<li>
+	<a href="http://www.codeproject.com/Articles/668478/Function-Composition-Function-Chaining-Currying-an">
+	Function Composition, Function Chaining, Currying, and Partial Application 
+	in F# and Ruby</a></li>
+	<li>
+	<a href="http://www.codeproject.com/Articles/575551/User-Authentication-in-Ruby-on-Rails">
+	User Authentication in Ruby on Rails</a></li>
+	<li>
+	<a href="http://www.codeproject.com/Articles/664754/Where-In-The-World-Are-My-Facebook-Friends">
+	Where in the World are my Facebook Friends?</a></li>
+</ul>
+<p>as these are more tutorial based for developing Ruby on Rails (RoR) 
+applications.&nbsp; This article assumes that you already have some familiarity 
+with the project structure of a RoR application.</p>
+<h3>AdventureWorks2008</h3>
+<p>This article uses Microsoft's example database, Adventure Works, to 
+demonstrate Ruby on Rails connectivity to SQL Server as well as example dataset 
+for all the screenshots in this article.</p>
+<h3>About the Ruby Code</h3>
+<p>You'll notice that I tend to write very short Ruby functions - this is 
+intended to promote the clarity of higher-level functions, which can otherwise 
+detract from the purpose of the function when embedding idiomatic Ruby and 
+arcane operations.&nbsp; I also like to explicitly state what the return value 
+of a function is, even when it's unnecessary.&nbsp; This promotes further 
+clarity to someone who is unfamiliar with the application code.</p>
+<h3>About the Slim &quot;Code&quot;</h3>
+<h3>About the Sass &quot;Code&quot;</h3>
+<h2>Gems and What They Are Used For</h2>
+<p>Gems are Ruby on Rails' plug-in mechanism for adding functionality from the 
+vast amount of free and open source components that people have contributed to 
+over the years.&nbsp; Besides the Rails gems, the ones I'm taking advantage of 
+are:</p>
+<pre>gem 'tiny_tds'
+gem 'activerecord-sqlserver-adapter'
+gem 'sqlite3'
+gem 'slim'
+gem 'thin'
+gem 'sass'
+gem 'will_paginate'</pre>
+<h3>TinyTDS</h3>
+<p>The gem <a href="https://github.com/rails-sqlserver/tiny_tds">tiny_tds</a> 
+necessary for connecting to SQL Server.&nbsp; TinyTDS requires a SQL Server 
+Authentication login, as opposed to a Windows Authentication login.&nbsp; I have
+<a href="http://marcclifton.wordpress.com/2013/10/25/connecting-to-sql-server-express-from-ruby/">
+a short blog entry here</a> on connecting to SQL Server Express from Ruby which 
+covers configuring SQL Server Express and testing the TinyTDS connectivity.&nbsp; 
+In this application, TinyTDS is used to acquire the schema information from SQL 
+Server -- see the section &quot;<a href="#Schema_Class">Schema Class</a>&quot; below.</p>
+<h3>activerecord-sqlserver-adapter</h3>
+<p><a href="https://github.com/rails-sqlserver/activerecord-sqlserver-adapter">
+This gem</a> uses the &quot;dblib&quot; connection mode which in turn is dependent upon 
+TinyTDS.&nbsp; What this gem enables you to do is to work with the Rails
+<a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">ActiveRecord</a> 
+API for all transactions with the database.&nbsp; It's important that we use 
+ActiveRecord for table queries because the pagination system relies on our Model 
+classes being derived from ActiveRecord::Base.&nbsp; In future articles, we'll 
+also be relying, in part, on ActiveRecord for other transactions on the table 
+records.</p>
+<p>Rails expects the connection information&nbsp; to be specified in the config\database.yml 
+file.&nbsp; Here we set up our development connection, specifying the sqlserver 
+adapter which the above gem provides us, along with the connection information 
+required by TinyTDS.</p>
+<pre>development:
+  adapter: sqlserver
+  database: AdventureWorks2008
+  dataserver: localhost\SQLEXPRESS
+  username: ruby
+  password: rubyist1</pre>
+<h3>sqlite3</h3>
+<p>One of the requirements of this application is to not change the schema of 
+the database that we're &quot;spidering.&quot;&nbsp; Also, there's a lot of session 
+information that is being preserved -- too much to place is session cookies on 
+the client.&nbsp; For this reason, we need to tell Rails in initializers\session_store.rb 
+that we want to use a database rather than cookies for storing session 
+information:</p>
+<pre>DatabaseSpider::Application.config.session_store :active_record_store</pre>
+<h3>&nbsp;</h3>
+<h3>gem 'slim'
+</h3>
+<h3>gem 'thin'
+</h3>
+<h3>gem 'sass'
+</h3>
+<h3>gem 'will_paginate'</h3>
+<h2>&nbsp;</h2>
+<h2><a name="Schema_Class">Schema Class</a></h2>
+<p>This class (schema.rb) encapsulates the static functions we need for 
+connecting to SQL Server directly and obtaining schema information and thus 
+relies on the TinyTDS gem for the direct SQL connection.&nbsp; The 
+main workhorse is this function:</p>
+<pre>def self.execute(sql)
+  client = create_db_client
+  result = client.execute(sql)
+  records = result.each(as: :array, symbolize_keys: true)
+  array = convert_to_array_of_hashes(result.fields, records)
+
+  array
+end</pre>
+<p>We rely on these helper methods (helpers\my_utils.rb) to create a client 
+connection:</p>
+<pre># create a client connection.
+def create_db_client
+  config = get_current_database_config
+  config_as_symbol = symbolize_hash_key(config)
+  client = TinyTds::Client.new(config_as_symbol)
+
+  client
+end
+
+# Returns the current database config has a dictionary of string =&gt; string
+def get_current_database_config
+  Rails.configuration.database_configuration[Rails.env]
+end
+
+# Given a dictionary of string =&gt; string, returns :symbol =&gt; string
+# Example: config_as_symbol = symbolize_hash_key(config)
+def symbolize_hash_key(hash)
+  hash.each_with_object({}){|(k,v), h| h[k.to_sym] = v}
+end</pre>
+<p>Once the records are returned from TinyTDS, I want to package them into an 
+array of hashes (field =&gt; value) so that there's a consistent representation of 
+the resulting data.&nbsp; This requires a couple post-processing functions:</p>
+<pre># Convert the array of records from the TinyTDS query into an array of hashes, where
+# the keys are the field names.
+def self.convert_to_array_of_hashes(fields, records)
+  array = []
+  records.each { |record|
+    dict = hash_from_key_value_arrays(fields, record)
+    array &lt;&lt; dict
+  }
+
+  array
+end
+
+# Given two arrays of equal length, 'keys' and 'values', returns a hash of key =&gt; value
+def hash_from_key_value_arrays(keys, values)
+  Hash[keys.zip values]
+end</pre>
+<h3>Schema Queries</h3>
+<p>We can now define the three functions that we need for our Spider UI:</p>
+<ol>
+	<li>get_user_tables</li>
+	<li>get_parent_table_info_for</li>
+	<li>get_child_table_info_for</li>
+</ol>
+<p>In the last two functions, we replace the string &quot;[table]&quot; with the table 
+name before executing the query:</p>
+<pre>  sql.sub!('[table]', table_name.partition('.')[2])</pre>
+<p>What we're not dealing with at the moment is that the table name being passed 
+in is fully qualified (it includes also the schema name) but the query doesn't 
+pay attention to the schema name, hence we need to extract just the table name 
+from the parameter value.&nbsp; This is one of those &quot;TODO&quot; items for a later 
+date.</p>
+<p>These functions rely on our storing the actual queries in a &quot;queries.yml&quot; 
+file, which is a hierarchical file similar to XML in concept but very different 
+in implementation.&nbsp; In this file, we store our schema queries:</p>
+<pre>Schema:
+  user_tables: &quot;
+    select 
+      s.name + '.' + o.name as table_name
+    from 
+      sys.objects o
+        left join sys.schemas s on s.schema_id = o.schema_id
+    where 
+      type_desc = 'USER_TABLE'&quot;
+
+  get_parents: &quot;
+    SELECT
+      f.parent_object_id as ChildObjectID,
+      SCHEMA_NAME(f.schema_id) SchemaName,
+      OBJECT_NAME(f.parent_object_id) TableName,
+      COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
+      SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
+      OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
+      COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
+    FROM 
+      sys.foreign_keys AS f
+        INNER JOIN sys.foreign_key_columns AS fc ON f.OBJECT_ID = fc.constraint_object_id
+        INNER JOIN sys.tables t ON t.object_id = fc.referenced_object_id
+        INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
+    WHERE
+      OBJECT_NAME (f.parent_object_id) = '[table]'&quot;
+
+  get_children: &quot;
+    SELECT 
+      f.parent_object_id as ChildObjectID,
+      SCHEMA_NAME(f.schema_id) SchemaName,
+      OBJECT_NAME(f.parent_object_id) TableName,
+      COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
+      SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
+      OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
+      COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
+    FROM
+      sys.foreign_keys AS f
+        INNER JOIN sys.foreign_key_columns AS fc ON fc.constraint_object_id = f.OBJECT_ID
+        INNER JOIN sys.tables t ON t.OBJECT_ID = fc.referenced_object_id
+        INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
+    WHERE
+      OBJECT_NAME (f.referenced_object_id) = '[table]'&quot;</pre>
+<p>and we again use a small helper function to retrieve the text:</p>
+<pre># Gets the specified query from the config.yml file
+# Example: sql = get_query(&quot;Schema&quot;, &quot;user_tables&quot;)
+# TODO: cache keys
+def get_query(key1, key2)
+  sql = YAML.load_file(File.expand_path('config/queries.yml'))
+  sql[key1][key2]
+end</pre>
+<p>Here's another &quot;TODO&quot; item for later: eventually this structure will be &quot;refactored&quot; to include the database 
+context, because of course querying the schema of a database is very database 
+specific!</p>
+<h4>Get User Tables</h4>
+<p>This function simply returns a collection of user table names:</p>
+<pre># Returns an array of strings containing the user tables in the database to which we're connecting.
+def self.get_user_tables
+  client = create_db_client
+  sql = get_query(&quot;Schema&quot;, &quot;user_tables&quot;)
+  result = client.execute(sql)
+  records = result.each(as: :array, symbolize_keys: true)
+  names = get_column(records, 0)
+
+  names
+end</pre>
+<h4>Get Parent Table Info</h4>
+<p>This function returns the foreign key associations of the current table, 
+resulting in an array of all parent tables along with schema information 
+describing the columns of both child and parent tables that describe the foreign 
+key relationship:</p>
+<pre># Returns an array of hashes (column name =&gt; value) of the parent table schemas of the specified table.
+def self.get_parent_table_info_for(table_name)
+  sql = get_query(&quot;Schema&quot;, &quot;get_parents&quot;)
+  sql.sub!('[table]', table_name.partition('.')[2])
+  execute(sql)
+end</pre>
+<h4>Get Child Table Info</h4>
+<p>This function returns the child tables and their foreign key column 
+relationships to the specified parent table.&nbsp; This query has a similar 
+structure as what is returned in the previous function, courtesy of how the SQL 
+is formatted (see earlier.)</p>
+<pre># Returns an array of hashes (column name =&gt; value) of the child table schemas of the specified table.
+def self.get_child_table_info_for(table_name)
+  sql = get_query(&quot;Schema&quot;, &quot;get_children&quot;)
+  sql.sub!('[table]', table_name.partition('.')[2])
+  execute(sql)
+end</pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>
 

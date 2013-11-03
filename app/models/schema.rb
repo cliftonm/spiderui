@@ -2,7 +2,8 @@ require 'tiny_tds'
 include MyUtils
 
 class Schema
-  def self.user_tables
+  # Returns an array of strings containing the user tables in the database to which we're connecting.
+  def self.get_user_tables
     client = create_db_client
     sql = get_query("Schema", "user_tables")
     result = client.execute(sql)
@@ -12,15 +13,15 @@ class Schema
     names
   end
 
-  # Returns an array of hashes (column name => value) of the parent tables of the specified table.
-  def self.load_parents(table_name)
+  # Returns an array of hashes (column name => value) of the parent table schemas of the specified table.
+  def self.get_parent_table_info_for(table_name)
     sql = get_query("Schema", "get_parents")
     sql.sub!('[table]', table_name.partition('.')[2])
     execute(sql)
   end
 
-  # Returns an array of hashes (column name => value) of the child tables of the specified table.
-  def self.load_children(table_name)
+  # Returns an array of hashes (column name => value) of the child table schemas of the specified table.
+  def self.get_child_table_info_for(table_name)
     sql = get_query("Schema", "get_children")
     sql.sub!('[table]', table_name.partition('.')[2])
     execute(sql)
@@ -36,6 +37,7 @@ class Schema
 
   private
 
+  # Execute the query and return the result as an array of key=>value hashes.
   def self.execute(sql)
     client = create_db_client
     result = client.execute(sql)

@@ -8,10 +8,7 @@ class DynamicTable < ActiveRecord::Base
   # Returns the field names given at least one record.
   def get_record_fields(records)
     fields = []
-
-    if records.count > 0
-       fields = records[0].attributes.keys
-    end
+    fields = records[0].attributes.keys if records.count > 0
 
     fields
   end

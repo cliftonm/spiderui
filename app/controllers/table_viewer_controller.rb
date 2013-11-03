@@ -131,7 +131,7 @@ class TableViewerController < ApplicationController
   # Initialize attributes, assuming no table is selected and no navigation possible.
   def initialize_attributes
     @table_viewer = DynamicTable.new
-    @tables = case_insensitive_sort(Schema.user_tables)          # Too large to save in a session!  This is annoying because we're loading this from the DB every single time!!!
+    @tables = case_insensitive_sort(Schema.get_user_tables)      # Too large to save in a session!  This is annoying because we're loading this from the DB every single time!!!
     @table_name = nil
     @parent_tables = []
     @child_tables = []
@@ -167,9 +167,9 @@ class TableViewerController < ApplicationController
   def load_navigators(table_name)
     @parent_tables = []
     @child_tables = []
-    parents = Schema.load_parents(table_name)
+    parents = Schema.get_parent_table_info_for(table_name)
     @parent_tables = format_for_combo_box(parents, :ReferencedSchemaName, :ReferencedTableName)
-    children = Schema.load_children(table_name)
+    children = Schema.get_child_table_info_for(table_name)
     @child_tables = format_for_combo_box(children, :SchemaName, :TableName)
   end
 
