@@ -1,0 +1,9 @@
+- # The list of all tables.
+.table_list_region
+  p Tables:
+  .table_list
+    ul
+      - @tables.each do |table_name|
+          li
+            = link_to(table_viewer_path(table_name: table_name)) do
+              t #{table_name}

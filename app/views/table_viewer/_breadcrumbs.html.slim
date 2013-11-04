@@ -1,0 +1,8 @@
+- # The navigation breadcrumbs
+.navigation_history
+  p = "Nav History:"
+  br
+  - if @breadcrumbs
+    - @breadcrumbs.each_with_index do |breadcrumb, index|
+      - table_name = breadcrumb.table_name
+      = link_to content_tag(:span, "#{table_name.partition('.')[2]}"), navigate_back_path(index: index), {:class => "button"}, :onclick => 'this.blur();'

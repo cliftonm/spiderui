@@ -1,0 +1,6 @@
+- # The selected user table data.
+.table_data_region
+  p #{@data_table.table_name}
+  = render "table_data", data_table: @data_table
+  .digg_pagination
+    = will_paginate @data_table.records, param_name: @data_table.table_name+"_page"

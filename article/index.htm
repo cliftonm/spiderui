@@ -7,8 +7,11 @@
 </head>
 
 <body>
-<h1>Day 1: Spider Database Website</h1>
+<p>
 <img border="0" src="screenshot-small.png" width="521" height="511"></p>
+<p>(<a href="screenshot-full-screen.png">click here for a full screen image)</a></p>
+The latest versions of this code can be obtained from my GitHub account
+<a href="https://github.com/cliftonm/spiderui">here</a>.</p>
 <h2>In The Beginning...</h2>
 <p><i>&quot;In the beginning of creation, when Marc made the website, the website 
 was without form and void, with darkness over the face of the HTML, and a mighty 
@@ -54,6 +57,8 @@ would be otherwise generated from concrete Models backed by physical tables.)</l
 <li>Describing the display fields in a lookup table to use when resolving 
 foreign keys.</li>
 <li>Specifying fields that need not be displayed.</li>
+	<li>Aliasing field names</li>
+	<li>Aliasing table names</li>
 </ul>
 <p>&quot;Day 3&quot; will consist of supporting:</p>
 <ul>
@@ -106,8 +111,11 @@ detract from the purpose of the function when embedding idiomatic Ruby and
 arcane operations.&nbsp; I also like to explicitly state what the return value 
 of a function is, even when it's unnecessary.&nbsp; This promotes further 
 clarity to someone who is unfamiliar with the application code.</p>
-<h3>About the Slim &quot;Code&quot;</h3>
-<h3>About the Sass &quot;Code&quot;</h3>
+<h3>About the Slim and Sass Markup</h3>
+<p>I've tried to keep the markup concise and I've put comments where it seems 
+appropriate to describe the intent of the markup.&nbsp; This is especially 
+salient in the Sass markup, where the intention behind the styling is not 
+necessarily obvious.</p>
 <h2>Gems and What They Are Used For</h2>
 <p>Gems are Ruby on Rails' plug-in mechanism for adding functionality from the 
 vast amount of free and open source components that people have contributed to 
@@ -149,24 +157,110 @@ required by TinyTDS.</p>
   dataserver: localhost\SQLEXPRESS
   username: ruby
   password: rubyist1</pre>
-<h3>sqlite3</h3>
+<h3>Sqlite3</h3>
 <p>One of the requirements of this application is to not change the schema of 
 the database that we're &quot;spidering.&quot;&nbsp; Also, there's a lot of session 
 information that is being preserved -- too much to place is session cookies on 
-the client.&nbsp; For this reason, we need to tell Rails in initializers\session_store.rb 
-that we want to use a database rather than cookies for storing session 
-information:</p>
-<pre>DatabaseSpider::Application.config.session_store :active_record_store</pre>
-<h3>&nbsp;</h3>
-<h3>gem 'slim'
-</h3>
-<h3>gem 'thin'
-</h3>
-<h3>gem 'sass'
-</h3>
-<h3>gem 'will_paginate'</h3>
-<h2>&nbsp;</h2>
-<h2><a name="Schema_Class">Schema Class</a></h2>
+the client.&nbsp; We're using Sqlite3 for storing session information 
+independent of our SQL Server database and
+<a href="https://github.com/sparklemotion/sqlite3-ruby">this gem</a> provides 
+the connectivity.&nbsp; To see how this is done, read the 
+section on &quot;<a href="#Storing_Session_Information_in_a_Separate_Database">Storing 
+Session Information in a Separate Database.</a>&quot;</p>
+<h3>Slim</h3>
+<p><a href="http://rubygems.org/gems/slim">This gem</a> eliminates the angle brackets and ending tags of the HTML script.&nbsp; 
+Here's a simple example of the lighter-weight syntax:</p>
+<pre>doctype
+html
+  head
+    title Database Spider
+    = stylesheet_link_tag &quot;application&quot;, media: &quot;all&quot;
+    = javascript_include_tag &quot;application&quot;
+    = csrf_meta_tags
+  body
+    = yield</pre>
+<p>Notice how indentation is used to determine where the closing tags should go 
+in the generated HTML.</p>
+<h3>Sass</h3>
+<p><a href="http://rubygems.org/gems/sass">This gem</a> is also &quot;lightens&quot; the description of CSS and works very well in 
+conjunction with Slim.&nbsp; You'll see Slim/Sass used such that the structure 
+of the Slim and Sass markup are identical.&nbsp; Here's a short example taken 
+from the user table list markup:</p>
+<h4>The Slim Markup</h4>
+<pre>.table_list_region
+  p Tables:
+  .table_list
+    ul
+      - @tables.each do |table_name|
+        li
+          = link_to(table_viewer_path(table_name: table_name)) do
+            t #{table_name}</pre>
+<p>Notice how Slim knows how to work with both HTML and Ruby script in the 
+markup!</p>
+<h4>The Sass Markup</h4>
+<pre>.table_list_region
+  width: 240px
+  height: 700px
+  float: left
+  p
+    text-align: left
+    margin-bottom: 2px
+  .table_list
+    text-align: left
+    border: 1px solid
+    border-radius: 3px
+    width: 100%
+    height: 100%
+    line-height: 1.5em
+    ul
+      width: 190px
+      height: 99%
+      overflow: auto
+      margin-top: 2px
+      li
+        list-style-type: none
+        margin-left: -30px
+        a:visited
+          color: #000000
+        a:link
+          color: #000000
+          text-decoration: none
+        a:hover
+          color: #0000FF</pre>
+<p>You can see how Sass markup can follow the same structure as the Slim markup.&nbsp; 
+The problem with this approach is that it obfuscates re-use of CSS.&nbsp; For 
+example, I might want to re-use the <code>table_list</code> styling but since it's a child of <code>table_list_region</code>, I can't 
+(at least not without a <code>table_list_region</code> container).&nbsp; 
+However, I can certainly outdent the styling:</p>
+<pre>.table_list_region
+  width: 240px
+  height: 700px
+  float: left
+  p
+    text-align: left
+    margin-bottom: 2px
+
+.table_list
+  text-align: left
+  ... etc ...</pre>
+<p>without affecting the structure of the Slim markup.&nbsp; Now <ocde>table_list</ocde> is 
+accessible inside the container as well as reusable by other containers.&nbsp; Unfortunately, I 
+have worked on at least one major open source project in which the developers 
+chose not to promote styling re-use, resulting in complex Sass structures in 
+which one has to follow the hiearchy of the Slim <i>exactly</i> to locate the 
+styling that I wanted to change.&nbsp; Don't do this unless your styling is 
+truly specific to its container context!</p>
+<h3>Will_paginate</h3>
+<p><a href="https://github.com/mislav/will_paginate/wiki">This</a> is an amazing 
+gem that paginates your data and provides a variety of pre-existing styling and 
+also the ability to customize the styling of the pagination bar.&nbsp; And of 
+course, one of the advantages of using pagination is that for tables with large 
+numbers of records, only the records for that page are returned from the 
+database, greatly improving usability.</p>
+<h2>The Code</h2>
+<p>I'm not going to go into every detail of the code, but I will point out some 
+of the more interesting features.</p>
+<h3><a name="Schema_Class">Schema Class</a></h3>
 <p>This class (schema.rb) encapsulates the static functions we need for 
 connecting to SQL Server directly and obtaining schema information and thus 
 relies on the TinyTDS gem for the direct SQL connection.&nbsp; The 
@@ -325,6 +419,394 @@ def self.get_child_table_info_for(table_name)
   sql.sub!('[table]', table_name.partition('.')[2])
   execute(sql)
 end</pre>
+<h2><a name="Storing_Session_Information_in_a_Separate_Database">Storing Session 
+Information in a Separate Database</a></h2>
+<p>We need to tell Rails in initializers\session_store.rb 
+that we want to use a database rather than cookies for storing session 
+information:</p>
+<pre>DatabaseSpider::Application.config.session_store :active_record_store</pre>
+<p>However, we want to tell Rails not to use the SQL Server database, so we also 
+need:</p>
+<pre>ActiveRecord::SessionStore::Session.establish_connection(:sessions)</pre>
+<p>and finally, we need to put the session definition in the config\database.yml 
+file:</p>
+<pre># use sqlite3 as the DB for storing session information.
+sessions:
+  adapter: sqlite3
+  database: db/session.sqlite3
+  pool: 5
+  timeout: 5000</pre>
+<h2>Dynamic Active Records</h2>
+<p>Another requirement is to avoid creating a concrete Model class for every 
+physical table in the database.&nbsp; To accomplish this, we derive a class from 
+ActiveRecord::Base but specify the table name to which it is associated:</p>
+<pre>class DynamicTable &lt; ActiveRecord::Base
+
+  # Returns an array of records for the specified table.
+  def set_table_data(table_name)
+    DynamicTable::table_name = table_name
+  end
+
+  # Returns the field names given at least one record.
+  def get_record_fields(records)
+    fields = []
+    fields = records[0].attributes.keys if records.count &gt; 0
+
+    fields
+  end
+end</pre>
+<p>This enables us to interact with the table just as we would with any other 
+ActiveRecord instance.</p>
+<p>The function get_record_fields is used to return the field names for the 
+record - we arbitrarily pick the first record for the field list, assuming any 
+records exist at all.&nbsp; This is a bit problematic because even if there are 
+no records returned, we'd like the table to at least display the field names.&nbsp; 
+So one of the &quot;TODO&quot; items is to use a TinyTDS query with &quot;where 1=0&quot;, which, 
+though it returns zero rows, will populate the field names for us.</p>
+<h2>TableViewerController, the Index Function</h2>
+<p>The <code>index</code> function of the <code>TableViewerController</code> is the main workhorse of the 
+website:</p>
+<pre>def index
+  initialize_attributes
+  update_model_page_numbers
+
+  if self.table_name
+    restore_page_number_on_nav # restores the page number when navigating back along the breadcrumbs
+    self.last_page_num = self.model_page_nums[self.table_name+'_page'] # preserve the page number so selected navigation records are selected from the correct page.
+    @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier, MAIN_TABLE_ROWS)
+    add_hidden_index_values(@data_table)
+    load_navigators(self.table_name)
+    @parent_dataset = load_fk_tables(@parent_tables)
+    @child_dataset = load_fk_tables(@child_tables)
+    # Update the parent tab index based on the existence and value of the selected_parent_table_index parameter
+    update_parent_child_tab_indices
+  end
+end</pre>
+<p>Various attributes are initialized, of most important are:</p>
+<ul>
+	<li>the list of user tables.</li>
+<li>a DynamicTable instance.</li>
+<li>the navigation breadcrumb trail is restored from the session.</li>
+</ul>
+<h3>Session Variables</h3>
+<p>There are several session variables defined in the controller:</p>
+<pre>attr_session_accessor :table_name         # the selected user table
+attr_session_accessor :qualifier          # the qualifier currently being used to filter the selected user table
+attr_session_accessor :breadcrumbs        # the breadcrumb trail
+attr_session_accessor :last_page_num      # the last page number of the user table
+attr_session_accessor :force_page_num     # if set, forces the pagination to a different page, used with breadcrumbs
+attr_session_accessor :model_page_nums 	  # dictionary of page numbers for all the models being displayed.</pre>
+<p>which help preserve the state of the page between posts.</p>
+<h3>Custom Attribute Accessor</h3>
+<p>I get tired of having to write code like this:</p>
+<pre>@qualifier = session[:qualifier]
+session[:table_name] = @table_name</pre>
+<p>so I wrote a custom attribute accessor that simplifies getting and setting 
+session values:</p>
+<pre># Adds an &quot;attr_session_accessor&quot; declarator that, in addition to setting/getting the value
+# to the attribute, it also gets/sets the value from the session.
+# Usage inside the class defining the attribute: self.foobar = 1
+# Note that &quot;self.&quot; must prefix the usage of the attribute.
+class Class
+  def attr_session_accessor(*args)
+    args.each do |arg|
+      self.class_eval(&quot;def #{arg}; @#{arg}=session['#{arg}']; end&quot;)
+      self.class_eval(&quot;def #{arg}=(val); @#{arg}=val; session['#{arg}']=val; end&quot;)
+    end
+  end
+end</pre>
+<p>For the getter, this code initializes the specified attribute from the 
+session name, and is equivalent to writing (for the variable <code>qualifier</code>):</p>
+<pre>@qualifier = session[:qualifier]</pre>
+<p>The setter initializes both the attribute and the session key with the 
+specified value, and is the equivalent of writing (for the variable <code>table_name</code>):</p>
+<pre>@table_name = val
+session[:table_name] = @table_name</pre>
+<p>Thus, we can code like this (this is the handler for clicking on a 
+breadcrumb):</p>
+<pre># Navigate back to the selected table in the nav history and pop the stack to that point.
+# Use the qualifier that was specified when navigating to this table.
+# Restore the page number the user was previously on for this table.
+def nav_back
+  stack_idx = params[:index].to_i
+  breadcrumb = self.breadcrumbs[stack_idx]          # get the current breadcrumb
+  self.table_name = breadcrumb.table_name           # we want to go back to this table and its qualifier
+  self.qualifier = breadcrumb.qualifier
+  self.breadcrumbs = self.breadcrumbs[0..stack_idx] # remove all the other items on the stack
+  self.force_page_num = breadcrumb.page_num
+
+  redirect_to table_viewer_path+&quot;/index&quot;
+end</pre>
+<p>I suppose it would be more readable if I named these variables with some 
+prefix, perhaps &quot;sess_&quot; to make it clear to the reader that we're accessing 
+session data, however, an more useful &quot;TODO&quot; would be to put together a <code>Session</code> 
+class that has all the session attributes that the controller referenecs.&nbsp; 
+Internally, this class could still use my custom attribute accessor, but it 
+would also allow intellisense to work within the IDE, improving the programmer's 
+experience and providing clarity as to what is going on behind the scenes.</p>
+<h3>Byte Encoding</h3>
+<p>One of the issues I encountered was with SQL Server fields that were using 
+byte encoding.&nbsp; This gave Rails fits and required a helper method, applied 
+to each field value:</p>
+<pre># Fixes encoding to UTF-8 for certain field types that cause problems.
+# http://stackoverflow.com/questions/13003287/encodingundefinedconversionerror
+helper_method :fix_encoding
+def fix_encoding(value)
+  value.to_s.encode('UTF-8', {:invalid =&gt; :replace, :undef =&gt; :replace, :replace =&gt; '?'})
+end</pre>
+<h3>Hiding Fields</h3>
+<p>Certain fields that are found in the Adventure Works database can simply 
+always be hidden.&nbsp; Also, the paginator adds a column that it uses 
+internally for keeping track of what page the user is viewing, and finally, I 
+add a column that the checkbox on each row uses to identify the selected row.&nbsp; 
+None of these need to be displayed, therefore we have a couple helper methods:</p>
+<pre># Return true if the field can be displayed.
+# All sorts of interesting things can be done here:
+# Hide primary keys, ModifiedDate, rowguid, etc.
+helper_method :display_field?
+def display_field?(table_name, field_name)
+  # '__rn' is something that will_paginate adds.
+  # '__idx' is my hidden column for creating a single column unique ID to identify selected rows, since
+  # we can't guarantee single-field PK's and we need some way to identify a row uniquely other than the actual data.
+  return false if ['__rn', '__idx', 'rowguid', 'ModifiedDate'].include?(field_name)
+  true
+end
+
+# Returns only the visible fields
+helper_method :get_visible_fields
+def get_visible_fields(data_table)
+  data_table.fields.keep_if {|f| display_field?(data_table.table_name, f)}
+end</pre>
+<h2>The User Interface</h2>
+<p>The user interface consists of six areas:</p>
+<ol>
+	<li>The list of user tables in the database</li>
+	<li>The selected table's data</li>
+	<li>The parent tables of the selected table</li>
+	<li>The child tables of the selected table</li>
+	<li>Navigation options</li>
+	<li>List of navigations (breadcrumbs)</li>
+</ol>
+<p>I decided to put each of these sections into their own render block, thus the 
+resulting index.html.slim file is simply:</p>
+<pre>=form_for @table_viewer do |f|
+  = render 'breadcrumbs'
+  = render 'user_tables'
+
+  - # The selected table data
+  - if !@table_name.nil?
+    = render 'parent_tables'
+    = render 'selected_table'
+    = render 'navigation', f: f
+    = render 'child_tables'
+
+- # Restore current page selections
+javascript:
+  select_fk_tab('#parent_tab', '#parent_tab_content', #{@parent_tab_index}, #{@parent_tables.count})
+  select_fk_tab('#child_tab', '#child_tab_content', #{@child_tab_index}, #{@child_tables.count})</pre>
+<h3>Breadcrumbs</h3>
+<p>
+<img border="0" src="breadcrumbs.png" width="375" height="62"></p>
+<p>The breadcrumbs is a clickable list of tables that the user has already 
+navigated to using the &quot;navigate to parent&quot; and/or &quot;navigate to child&quot; options.&nbsp; 
+When a breadcrumb is selected, any selection that was made to qualify the data 
+for that table is restored as well as the table's data.</p>
+<h4>The Slim Markup</h4>
+<pre>- # The navigation breadcrumbs
+.navigation_history
+  p = &quot;Nav History:&quot;
+  br
+  - if @breadcrumbs
+    - @breadcrumbs.each_with_index do |breadcrumb, index|
+      - table_name = breadcrumb.table_name
+      = link_to content_tag(:span, &quot;#{table_name.partition('.')[2]}&quot;), navigate_back_path(index: index), {:class =&gt; &quot;button&quot;}, :onclick =&gt; 'this.blur();'</pre>
+<h3>User Tables</h3>
+<p>
+<img border="0" src="user_tables.png" width="249" height="404"></p>
+<p>This is simply an alphabetical list of user tables.</p>
+<h4>The Slim Markup</h4>
+<pre>- # The list of all tables.
+.table_list_region
+  p Tables:
+  .table_list
+    ul
+      - @tables.each do |table_name|
+        li
+          = link_to(table_viewer_path(table_name: table_name)) do
+            t #{table_name}</pre>
+<h3>Selected Table Data</h3>
+<p>
+<img border="0" src="selected_table.png" width="613" height="189"></p>
+<p>The selected user table is displayed with a checkbox on each row so that the 
+user can select a specific row or rows and navigate to a child or parent table 
+whose resulting data is displayed in the same box but qualified by the 
+selection.&nbsp; If no selection is made, then all the parent or child data is 
+displayed.&nbsp; At the bottom of the table is the paginator (see the parent and 
+child table data for visual examples.)</p>
+<h4>The Slim Markup</h4>
+<pre>- # The selected user table data.
+.table_data_region
+  p #{@data_table.table_name}
+  = render &quot;table_data&quot;, data_table: @data_table
+  .digg_pagination
+    = will_paginate @data_table.records, param_name: @data_table.table_name+&quot;_page&quot;</pre>
+<p>Note that this code (and the code used for child and table navigation) all 
+re-use another render called &quot;table_data&quot;.</p>
+<h3>_table_data.html.slim</h3>
+<p>This is file used in common for rendering the table data in the selected 
+table, parent tables and child tables:</p>
+<pre>- # render for table data. The paginator is separate because it requires additional parameters that are specific
+- # to the data being paginated.
+.table_data
+  - visible_fields = get_visible_fields(data_table)
+  table
+    - # Display header
+    tr
+      - # Dummy header column for checkbox
+      th
+
+      - # Header of field names
+      - visible_fields.each do |field_name|
+        th = field_name
+
+    - # Display records
+    - data_table.records.each do |record|
+      tr class=cycle('row0', 'row1')
+        td
+          - # __idx is added by the controller to uniquely identify a record.
+          = check_box_tag 'selected_records[]', record[&quot;__idx&quot;]
+          - visible_fields.each_with_index do |field_name, field_index|
+            - # Extends the last column out to the right edge of the table.
+            - if field_index == visible_fields.length - 1
+              td.last = fix_encoding(record[field_name])
+            - else
+              td = fix_encoding(record[field_name])</pre>
+<p>The interesting part of this markup is figuring out when the last column is 
+being rendered and to change the styling slightly so that the row color extends 
+to the right edge of the table box:</p>
+<rep>td<br>
+&nbsp; border-left: 1px solid #d0d0d0<br>
+&nbsp; white-space: nowrap<br>
+&nbsp; padding-left: 5px<br>
+&nbsp; padding-right: 5px<br>
+td.last&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+// the last column fills any remaining space<br>
+&nbsp; width: 100%<p>Also notice the snazzy cycle function of Ruby:</p>
+<pre>tr class=cycle('row0', 'row1')</pre>
+<p>which cycles through the class styling strings for the rows, achieving the 
+alternating colors:</p>
+<pre>tr.row0 // alternating row colors
+  background-color: #ffffff
+tr.row1
+  background-color: #ddffdd</pre>
+<h3>Navigation</h3>
+<p>
+<img border="0" src="navigation.png" width="269" height="206"></p>
+<p>The Navigation area lets the user select which parent or child table to 
+navigate to.&nbsp; If rows have been selected in the user table display, the 
+parent/child records are qualified by the selected records.&nbsp; In that case, 
+to show unqualified records, the user clicks on Show All Records.&nbsp; To 
+return to the qualified records, click on the last breadcrumb button, as the 
+navigation &quot;breadcrumb&quot; trail preserves the qualifiers.</p>
+<h4>Parent Navigation</h4>
+<p>The selected user table is treated as the child table, with foreign keys to 
+the parent table.&nbsp; If no rows in the user table have been selected, then 
+all rows of the parent table are displayed.&nbsp; If one or more rows has been 
+selected (using checkboxes) then all columns involved in the foreign key 
+relationship to the parent table are considered to construct the qualifying 
+&quot;where&quot; clause.&nbsp; For example, if there are two columns, one for billing 
+address and one for shipping address, that refer to an address, then both 
+address records of the parent (assuming the child has different values for the 
+foreign key ID) will be displayed when navigating to the parent.&nbsp; </p>
+<h4>Child Navigation</h4>
+<p>Here the selected user table is considered to be the parent, and the table 
+selected in the combobox &quot;Navigate to child:&quot; is inspected for foreign key 
+fields that map to the primary key fields of the selected user table.&nbsp; If 
+no rows in the user table have been selected (using checkboxes) then all child 
+records are displayed.&nbsp; If rows have been selected, then the qualifier is 
+constructed programmatically to limit the child records to only those records 
+that reference the selected rows.</p>
+<h4>The Slim Markup</h4>
+<pre>- # table navigation
+.navigation
+  fieldset
+    legend View and Navigation:
+    br
+    .nav_button
+      = f.submit(&quot;Show All Records&quot;, name: 'navigate_show_all')
+    - # Separate div because 'Go' buttons are left padded.
+    .nav_options
+      br Navigate to parent:
+      = select_tag &quot;cbParents&quot;, options_from_collection_for_select(@parent_tables, 'id', 'name')
+      = f.submit(&quot;Go&quot;, name: 'navigate_to_parent')
+      br Navigate to child:
+      = select_tag &quot;cbChildren&quot;, options_from_collection_for_select(@child_tables, 'id', 'name')
+      = f.submit(&quot;Go&quot;, name: 'navigate_to_child')</pre>
+<h3>Parent and Child Tables</h3>
+<p>
+<img border="0" src="parent_tables.png" width="551" height="267"></p>
+<p>These two regions of the page are almost identical except for how the 
+pagination is handled and of course the tables and their records that they 
+display.&nbsp; The checkboxes in these tables don't do anything, <i>yet.</i></p>
+<p>The fun part about this markup is that the tabs are styled columns of a table 
+row, and we utilize a scrollbar for when there are more tabs that fit on the 
+screen.</p>
+<h4>The Slim Markup (for parent tables only)</h4>
+<pre>- # if we have a selected table and it has parent tables, show the parent tables.
+- if !@table_name.nil? &amp;&amp; @parent_tables.length &gt; 0
+  .tab_region
+    .tab_list
+      table
+        tr
+          - @parent_tables.each_with_index do |table_info, index|
+            td id=&quot;parent_tab#{index}&quot;
+              a title=&quot;View #{table_info.name}&quot; 
+		onclick=&quot;select_fk_tab('#parent_tab', '#parent_tab_content', #{index}, #{@parent_tables.count})&quot;
+                span = &quot;#{table_info.name}&quot;
+
+
+    - # table_info isn't used because this data is formatted for the comboboxes.
+    - # What we're actually simply interested in here is the index.
+    - @parent_tables.each_with_index do |table_info, index|
+      .tab_content id=&quot;parent_tab_content#{index}&quot;
+        .tab_table_data_region
+          = render &quot;table_data&quot;, data_table: @parent_dataset[index]
+          .digg_pagination
+            = will_paginate @parent_dataset[index].records, 
+              param_name: @parent_dataset[index].table_name+&quot;_page&quot;, 
+              params: {selected_parent_table_index: index }</pre>
+<h2>Javascript</h2>
+<p>Finally, we need a tiny amount of Javascript to put it all together, which 
+handles selecting a tab and rendering the page after a post or refresh:</p>
+<pre>/* Deselect all the parent tabs and hide all the content, then select the specified tab and show the desired content */
+function select_fk_tab(tab_selector, content_selector, index, num_tabs)
+{
+  for (var i=0; i&lt;num_tabs; i++)
+  {
+    $(tab_selector + i.toString()).removeClass('current');
+    $(content_selector + i.toString()).hide();
+  }
+
+  $(tab_selector + index.toString()).addClass('current');
+  $(content_selector + index.toString()).show();
+}</pre>
+<h2>Conclusion</h2>
+<p>When all is said and done, we have:</p>
+<ul>
+	<li>successfully connected Ruby on Rails with SQL Server</li>
+	<li>dealt with using a separate database for session state</li>
+	<li>successfully used ActiveRecord in a dynamic context</li>
+<li>implemented a good start for a general purpose, web-based, database 
+navigator</li>
+	<li>learned a lot about Slim and Sass in the process (which was one of my 
+	primary goals)</li>
+</ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>

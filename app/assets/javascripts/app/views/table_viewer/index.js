@@ -6,6 +6,7 @@ function select_fk_tab(tab_selector, content_selector, index, num_tabs)
         $(tab_selector + i.toString()).removeClass('current');
         $(content_selector + i.toString()).hide();
     }
+
     $(tab_selector + index.toString()).addClass('current');
     $(content_selector + index.toString()).show();
 }

@@ -1,0 +1,21 @@
+- # If we have a selected table and it has child tables, show the child tables.
+- if !@table_name.nil? && @child_tables.length > 0
+  .child_table_region
+    .tab_region
+      .tab_list
+        table
+          tr
+            - @child_tables.each_with_index do |table_info, index|
+              td id="child_tab#{index}"
+                a title="View #{table_info.name}" onclick="select_fk_tab('#child_tab', '#child_tab_content', #{index}, #{@child_tables.count})"
+                  span = "#{table_info.name}"
+
+
+      - # table_info isn't used because this data is formatted for the comboboxes.
+      - # What we're actually simply interested in here is the index.
+      - @child_tables.each_with_index do |table_info, index|
+        .tab_content id="child_tab_content#{index}"
+          .tab_table_data_region
+            = render "table_data", data_table: @child_dataset[index]
+            .digg_pagination
+              = will_paginate @child_dataset[index].records, param_name: @child_dataset[index].table_name+"_page", params: {selected_child_table_index: index }

@@ -1,91 +1,13 @@
 =form_for @table_viewer do |f|
-  - # The navigation breadcrumbs
-  .navigation_history
-    p = "Nav History:"
-    br
-    - if @breadcrumbs
-      - @breadcrumbs.each_with_index do |breadcrumb, index|
-        - table_name = breadcrumb.table_name
-        = link_to content_tag(:span, "#{table_name.partition('.')[2]}"), navigate_back_path(index: index), {:class => "button"}, :onclick => 'this.blur();'
-
-  - # The list of all tables.
-  .table_list_region
-    p Tables:
-    .table_list
-      ul
-        - @tables.each do |table_name|
-            li
-              = link_to(table_viewer_path(table_name: table_name)) do
-                t #{table_name}
-
-  - # if we have a selected table and it has parent tables, show the parent tables.
-  - if !@table_name.nil? && @parent_tables.length > 0
-    .tab_region
-      .tab_list
-        table
-          tr
-            - @parent_tables.each_with_index do |table_info, index|
-              td id="parent_tab#{index}"
-                a title="View #{table_info.name}" onclick="select_fk_tab('#parent_tab', '#parent_tab_content', #{index}, #{@parent_tables.count})"
-                  span = "#{table_info.name}"
-
-
-      - # table_info isn't used because this data is formatted for the comboboxes.
-      - # What we're actually simply interested in here is the index.
-      - @parent_tables.each_with_index do |table_info, index|
-        .tab_content id="parent_tab_content#{index}"
-          .tab_table_data_region
-            = render "table_data", data_table: @parent_dataset[index]
-            .digg_pagination
-              = will_paginate @parent_dataset[index].records, param_name: @parent_dataset[index].table_name+"_page", params: {selected_parent_table_index: index }
+  = render 'breadcrumbs'
+  = render 'user_tables'
 
   - # The selected table data
   - if !@table_name.nil?
-    .table_data_region
-      p #{@data_table.table_name}
-      = render "table_data", data_table: @data_table
-      .digg_pagination
-        = will_paginate @data_table.records, param_name: @data_table.table_name+"_page"
-
-    - # table navigation
-    .navigation
-      fieldset
-        legend View and Navigation:
-        br
-        .nav_button
-          = f.submit("Show All Records", name: 'navigate_show_all')
-        .nav_button
-          = f.submit("Qualify By Selection", name: 'qualify_by_selection')
-        - # Separate div because 'Go' buttons are left padded.
-        .nav_options
-          br Navigate to parent:
-          = select_tag "cbParents", options_from_collection_for_select(@parent_tables, 'id', 'name')
-          = f.submit("Go", name: 'navigate_to_parent')
-          br Navigate to child:
-          = select_tag "cbChildren", options_from_collection_for_select(@child_tables, 'id', 'name')
-          = f.submit("Go", name: 'navigate_to_child')
-
-  - # If we have a selected table and it has child tables, show the child tables.
-  - if !@table_name.nil? && @child_tables.length > 0
-    .child_table_region
-      .tab_region
-        .tab_list
-          table
-            tr
-              - @child_tables.each_with_index do |table_info, index|
-                td id="child_tab#{index}"
-                  a title="View #{table_info.name}" onclick="select_fk_tab('#child_tab', '#child_tab_content', #{index}, #{@child_tables.count})"
-                    span = "#{table_info.name}"
-
-
-        - # table_info isn't used because this data is formatted for the comboboxes.
-        - # What we're actually simply interested in here is the index.
-        - @child_tables.each_with_index do |table_info, index|
-          .tab_content id="child_tab_content#{index}"
-            .tab_table_data_region
-              = render "table_data", data_table: @child_dataset[index]
-              .digg_pagination
-                = will_paginate @child_dataset[index].records, param_name: @child_dataset[index].table_name+"_page", params: {selected_child_table_index: index }
+    = render 'parent_tables'
+    = render 'selected_table'
+    = render 'navigation', f: f
+    = render 'child_tables'
 
 javascript:
   select_fk_tab('#parent_tab', '#parent_tab_content', #{@parent_tab_index}, #{@parent_tables.count})
