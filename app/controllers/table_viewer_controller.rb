@@ -28,7 +28,7 @@ class TableViewerController < ApplicationController
     update_model_page_numbers
 
     if self.table_name
-      restore_page_number_on_nav                                    # restores the page number when navigating back along the breadcrumbs
+      restore_page_number_on_nav                                                  # restores the page number when navigating back along the breadcrumbs
       self.last_page_num = self.model_page_nums[self.table_name+'_page']          # preserve the page number so selected navigation records are selected from the correct page.
       @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier, MAIN_TABLE_ROWS)
       add_hidden_index_values(@data_table)
@@ -70,6 +70,7 @@ class TableViewerController < ApplicationController
     current_table = self.table_name
 
     if params[:navigate_to_parent]
+      clear_model_qualifiers
       target_table = params[:cbParents]
       selected_records = []
       selected_records = get_selected_records(self.table_name, params[:selected_records], self.qualifier) if params[:selected_records]
@@ -81,6 +82,7 @@ class TableViewerController < ApplicationController
       qualifier = get_parent_qualifier(current_table, target_table, selected_records)
       navigating_to(target_table, qualifier)
     elsif params[:navigate_to_child]
+      clear_model_qualifiers
       target_table = params[:cbChildren]
       selected_records = []
       selected_records = get_selected_records(self.table_name, params[:selected_records], self.qualifier) if params[:selected_records]
@@ -100,7 +102,8 @@ class TableViewerController < ApplicationController
       if selected_records.empty?
         flash[:error] = "Please select some records from the user table on the left."
       else
-        clear_model_page_nums
+        clear_model_qualifiers
+        clear_model_page_nums_except(self.table_name)
         load_navigators(self.table_name)      # Parent_tables and child_tables need to be loaded first.
         qualify_parent_records(self.table_name, selected_records)
         qualify_child_records(self.table_name, selected_records)
@@ -132,9 +135,16 @@ class TableViewerController < ApplicationController
     self.child_qualifiers = {}
   end
 
-  # Clear the page numbers being displayed for all the models (the parent and child models)
+  # Clear the page numbers being displayed for all the models
   def clear_model_page_nums
     self.model_page_nums = {}
+  end
+
+  # Clear the page numbers being displayed for all the models except the one specified
+  def clear_model_page_nums_except(table_name)
+    model_page_nums.each do |k,v |
+      model_page_nums[k] = 1 unless k==table_name + '_page'
+    end
   end
 
   # stores the selected parent table index if the selected_parent_table_index exists.  It will exist
@@ -232,14 +242,14 @@ class TableViewerController < ApplicationController
   def add_hidden_index_values(data_table)
     data_table.fields << '__idx'
     data_table.records.each_with_index do |record, index|
-      record["__idx"] = index
+      record.__idx = index
     end
   end
 
   # Returns an array of DynamicTable instances for the selected record indexes
   def get_selected_records(table_name, selected_record_indexes, qualifier)
     selected_records = []
-    data_table = load_DDO(table_name, self.last_page_num, qualifier)         # get the records for the current page.
+    data_table = load_DDO(table_name, self.last_page_num, qualifier, MAIN_TABLE_ROWS)         # get the records for the current page.
 
     # indexes always start with 0 regardless of what page we're on.
     selected_record_indexes.each do |idx|

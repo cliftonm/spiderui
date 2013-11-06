@@ -35,6 +35,16 @@ class Schema
     execute(sql)
   end
 
+  # Returns an array of fields for the specified table by doing a "where 1=0" query.
+  def self.get_fields(table_name)
+    sql = get_query("Schema", "get_fields")
+    sql.sub!('[table]', table_name)
+    client = create_db_client
+    result = client.execute(sql)
+
+    result.fields
+  end
+
   private
 
   # Execute the query and return the result as an array of key=>value hashes.

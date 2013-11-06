@@ -4,6 +4,7 @@ Schema:
     from sys.objects o
     left join sys.schemas s on s.schema_id = o.schema_id
     where type_desc = 'USER_TABLE'"
+  get_fields: "select * from [table] where 1=0"
   get_parents: "
     SELECT
       f.parent_object_id as ChildObjectID,

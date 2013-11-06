@@ -42,7 +42,7 @@ module MyUtils
 
   # Loads the Dynamic Data Object with data and field names
   # Returns a DataTable instance
-  def load_DDO(table_name, page = nil, where = nil, items_per_page = 25)
+  def load_DDO(table_name, page = nil, where = nil, items_per_page = 20)
     raise "Table name cannot be nil" if table_name.nil?
     table = DynamicTable.new
     table.set_table_data(table_name)
@@ -53,9 +53,15 @@ module MyUtils
     else
       records = DynamicTable.paginate(page: page, per_page: items_per_page)
     end
-    fields = table.get_record_fields(records)
 
-    return DataTable.new(table_name, records, fields)
+    fields1 = Schema.get_fields(table_name)
+    fields1 = fields1.insert(0, '__rn')
+
+    # For some absolutely unknown reason, we need to do this.
+    # If we don't, then we get this error: TinyTds::Error: No column name was specified for column 2 of '__rnt'.:
+    d = records[0]
+
+    return DataTable.new(table_name, records, fields1)
   end
 
   # Given two arrays of equal length, 'keys' and 'values', returns a hash of key => value
