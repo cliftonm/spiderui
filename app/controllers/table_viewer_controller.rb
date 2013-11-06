@@ -16,6 +16,8 @@ class TableViewerController < ApplicationController
   attr_session_accessor :last_page_num
   attr_session_accessor :force_page_num
   attr_session_accessor :model_page_nums    # dictionary of page numbers for all the models being displayed.
+  attr_session_accessor :parent_qualifiers  # hash of table name => qualifier
+  attr_session_accessor :child_qualifiers   # has of table name => qualifier
 
   # The main page.
   # If a :table_name exists in the session, then the table data is loaded and displayed, as well as the
@@ -31,8 +33,8 @@ class TableViewerController < ApplicationController
       @data_table = load_DDO(self.table_name, self.last_page_num, self.qualifier, MAIN_TABLE_ROWS)
       add_hidden_index_values(@data_table)
       load_navigators(self.table_name)
-      @parent_dataset = load_fk_tables(@parent_tables)
-      @child_dataset = load_fk_tables(@child_tables)
+      @parent_dataset = load_fk_tables(@parent_tables, self.parent_qualifiers)
+      @child_dataset = load_fk_tables(@child_tables, self.child_qualifiers)
       # Update the parent tab index based on the existence and value of the selected_parent_table_index parameter
       update_parent_child_tab_indices
     end
@@ -44,14 +46,18 @@ class TableViewerController < ApplicationController
     self.table_name = nil
     self.qualifier = nil
     self.model_page_nums = nil
+    self.parent_qualifiers = nil
+    self.child_qualifiers = nil
 
     redirect_to :root
   end
 
   # Respond to a user selecting a table.  We store the table name in the session and redirect to the index page.
   def view_table
+
     self.qualifier = nil        # clear out the current qualifier
-    self.model_page_nums = {}   # clear the page numbers being displayed for all the models.
+    clear_model_qualifiers
+    clear_model_page_nums
     self.table_name = params[:table_name]
     create_breadcrumb_trail(params[:table_name])
 
@@ -85,6 +91,7 @@ class TableViewerController < ApplicationController
     elsif params[:navigate_show_all]
       # Show all records for the current navigation point
       self.qualifier = nil
+      clear_model_qualifiers
     elsif params[:qualify_by_selection]
       # Qualify all parent and child tables by the current selection.
       selected_records = []
@@ -93,8 +100,10 @@ class TableViewerController < ApplicationController
       if selected_records.empty?
         flash[:error] = "Please select some records from the user table on the left."
       else
-        qualify_parent_records(selected_records)
-        qualify_child_records(selected_records)
+        clear_model_page_nums
+        load_navigators(self.table_name)      # Parent_tables and child_tables need to be loaded first.
+        qualify_parent_records(self.table_name, selected_records)
+        qualify_child_records(self.table_name, selected_records)
       end
     end
 
@@ -116,6 +125,17 @@ class TableViewerController < ApplicationController
   end
 
   private
+
+  # Clear parent and child model qualifiers.
+  def clear_model_qualifiers
+    self.parent_qualifiers = {}
+    self.child_qualifiers = {}
+  end
+
+  # Clear the page numbers being displayed for all the models (the parent and child models)
+  def clear_model_page_nums
+    self.model_page_nums = {}
+  end
 
   # stores the selected parent table index if the selected_parent_table_index exists.  It will exist
   # when the paginator is used.
@@ -147,6 +167,14 @@ class TableViewerController < ApplicationController
     @parent_tables = []
     @child_tables = []
     @breadcrumbs = self.breadcrumbs                              # we need to explicitly load up this attribute from the session store
+
+    if self.parent_qualifiers.nil?
+      self.parent_qualifiers = {}
+    end
+
+    if self.child_qualifiers.nil?
+      self.child_qualifiers = {}
+    end
   end
 
   # Create a breadcrumb trail array starting with the specified table.
@@ -184,15 +212,14 @@ class TableViewerController < ApplicationController
     @child_tables = format_for_combo_box(children, :SchemaName, :TableName)
   end
 
-  # Given an array of fk (parents or children) tables (OpenStruct with id and name properties), return an array of DataTables
+  # Given an array of fk (parent or child) tables (OpenStruct with id and name properties), return an array of DataTables
   # of data for each parent/child table.
-  def load_fk_tables(tables)
+  def load_fk_tables(tables, qualifiers)
     dataset = []
 
     tables.each_with_index do |table, index|
-      # TODO: can't ignore page numbers forever
-      # TODO: can't ignore the qualifier forever either
-      data_table = load_DDO(table.name, self.model_page_nums[table.name+'_page'], nil, FK_ROWS)
+      qualifier = qualifiers[table.name]
+      data_table = load_DDO(table.name, self.model_page_nums[table.name+'_page'], qualifier, FK_ROWS)
       # Preserve the index so we can select the tab again when the page refreshes
       data_table.index = index
       dataset << data_table
@@ -222,6 +249,31 @@ class TableViewerController < ApplicationController
     selected_records
   end
 
+  # Load all parent records qualified by the selected records.
+  def qualify_parent_records(current_table, selected_records)
+    parent_qualifiers = {}
+
+    parent_tables.each do |table|
+      qualifier = get_parent_qualifier(current_table, table.name, selected_records)
+      parent_qualifiers[table.name] = qualifier
+    end
+
+    self.parent_qualifiers = parent_qualifiers
+  end
+
+  # Load all child records qualified by the selected records.
+  def qualify_child_records(current_table, selected_records)
+    child_qualifiers = {}
+
+    child_tables.each do |table|
+      qualifier = get_child_qualifier(current_table, table.name, selected_records)
+      child_qualifiers[table.name] = qualifier
+    end
+
+    self.child_qualifiers = child_qualifiers
+  end
+
+  # Returns the qualifier for the relationship between the current table and the target table for the selected records.
   def get_parent_qualifier(current_table, target_table, selected_records)
     key_cols = get_key_columns(current_table, target_table)
     qualifier = create_value_qualifier(key_cols, selected_records, :parent, current_table, target_table)
@@ -229,6 +281,7 @@ class TableViewerController < ApplicationController
     qualifier
   end
 
+  # Returns the qualifier for the relationship between the current table and the target table for the selected records.
   def get_child_qualifier(current_table, target_table, selected_records)
     key_cols = get_key_columns(target_table, current_table)
     qualifier = create_value_qualifier(key_cols, selected_records, :child, current_table, target_table)
