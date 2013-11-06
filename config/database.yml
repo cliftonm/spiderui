@@ -6,7 +6,7 @@
 development:
   adapter: sqlserver
   database: AdventureWorks2008
-  dataserver: localhost\SQLEXPRESS
+  dataserver: localhost
   username: ruby
   password: rubyist1
 
