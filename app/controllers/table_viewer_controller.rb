@@ -85,6 +85,17 @@ class TableViewerController < ApplicationController
     elsif params[:navigate_show_all]
       # Show all records for the current navigation point
       self.qualifier = nil
+    elsif params[:qualify_by_selection]
+      # Qualify all parent and child tables by the current selection.
+      selected_records = []
+      selected_records = get_selected_records(self.table_name, params[:selected_records], self.qualifier) if params[:selected_records]
+
+      if selected_records.empty?
+        flash[:error] = "Please select some records from the user table on the left."
+      else
+        qualify_parent_records(selected_records)
+        qualify_child_records(selected_records)
+      end
     end
 
     redirect_to table_viewer_path+"/index"
