@@ -48,20 +48,18 @@ module MyUtils
     table.set_table_data(table_name)
     page ||= 1                  # page is 1 if nil
 
+    # Note the use of ".all", to force loading of the data.
+    # See: http://m.onkey.org/active-record-query-interface
+    # And: http://marcclifton.wordpress.com/2013/11/06/tinytdserror-no-column-name-was-specified-for-column-2-of-__rnt/
     if where
-      records = DynamicTable.where(where).paginate(page: page, per_page: items_per_page)
+      records = DynamicTable.where(where).paginate(page: page, per_page: items_per_page).all
     else
-      records = DynamicTable.paginate(page: page, per_page: items_per_page)
+      records = DynamicTable.paginate(page: page, per_page: items_per_page).all
     end
 
-    fields1 = Schema.get_fields(table_name)
-    fields1 = fields1.insert(0, '__rn')
+    fields = Schema.get_fields(table_name)
 
-    # For some absolutely unknown reason, we need to do this.
-    # If we don't, then we get this error: TinyTds::Error: No column name was specified for column 2 of '__rnt'.:
-    d = records[0]
-
-    return DataTable.new(table_name, records, fields1)
+    return DataTable.new(table_name, records, fields)
   end
 
   # Given two arrays of equal length, 'keys' and 'values', returns a hash of key => value

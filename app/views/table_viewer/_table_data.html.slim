@@ -20,7 +20,7 @@
           = check_box_tag 'selected_records[]', record.__idx
         - visible_fields.each_with_index do |field_name, field_index|
           - # Extends the last column out to the right edge of the table.
-          - if field_index == visible_fields.length - 1
+          - if last_column(visible_fields, field_index)
             td.last = fix_encoding(record[field_name])
           - else
             td = fix_encoding(record[field_name])

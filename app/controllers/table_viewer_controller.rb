@@ -240,7 +240,6 @@ class TableViewerController < ApplicationController
 
   # Add hidden index values so we can identify uniquely selected rows in 'post'
   def add_hidden_index_values(data_table)
-    data_table.fields << '__idx'
     data_table.records.each_with_index do |record, index|
       record.__idx = index
     end
@@ -388,7 +387,7 @@ class TableViewerController < ApplicationController
     # '__rn' is something that will_paginate adds.
     # '__idx' is my hidden column for creating a single column unique ID to identify selected rows, since
     # we can't guarantee single-field PK's and we need some way to identify a row uniquely other than the actual data.
-    return false if ['__rn', '__idx', 'rowguid', 'ModifiedDate'].include?(field_name)
+    return false if ['__rn', 'rowguid', 'ModifiedDate'].include?(field_name)
     true
   end
 
@@ -403,5 +402,10 @@ class TableViewerController < ApplicationController
   helper_method :get_visible_fields
   def get_visible_fields(data_table)
     data_table.fields.keep_if {|f| display_field?(data_table.table_name, f)}
+  end
+
+  helper_method :last_column
+  def last_column(visible_fields, field_index)
+    return field_index == visible_fields.length - 1
   end
 end
