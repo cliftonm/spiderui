@@ -1,0 +1,5 @@
+=form_for @metadata do |f|
+  = render 'shared/user_tables', path: 'metadata_table'
+  - if !@metadata_table_name.nil?
+    .left-padding-10
+    = render 'shared/table_fields', path: 'metadata_field'

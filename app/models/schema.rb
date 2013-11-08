@@ -13,6 +13,18 @@ class Schema
     names
   end
 
+  def self.get_table_fields(table_name)
+    client = create_db_client
+    sql = get_query("Schema", "get_table_fields")
+    sql.sub!('[schema]', table_name.partition('.')[0])
+    sql.sub!('[table]', table_name.partition('.')[2])
+    result = client.execute(sql)
+    records = result.each(as: :array, symbolize_keys: true)
+    field_names = get_column(records, 0)
+
+    field_names
+  end
+
   # Returns an array of hashes (column name => value) of the parent table schemas of the specified table.
   def self.get_parent_table_info_for(table_name)
     sql = get_query("Schema", "get_parents")

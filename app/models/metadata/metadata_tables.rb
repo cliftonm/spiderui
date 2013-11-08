@@ -1,0 +1,3 @@
+class MetadataTables < MetadataActiveRecord
+end
+

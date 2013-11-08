@@ -1,0 +1,3 @@
+class MetadataTypeTypes < MetadataActiveRecord
+end
+

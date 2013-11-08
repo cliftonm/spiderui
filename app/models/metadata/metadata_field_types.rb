@@ -1,0 +1,3 @@
+class MetadataFieldTypes < MetadataActiveRecord
+end
+

@@ -1,6 +1,6 @@
 =form_for @table_viewer do |f|
   = render 'breadcrumbs'
-  = render 'user_tables'
+  = render 'shared/user_tables', path: 'table_viewer'
 
   - # The selected table data
   - if !@table_name.nil?

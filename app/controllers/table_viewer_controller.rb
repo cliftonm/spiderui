@@ -172,7 +172,8 @@ class TableViewerController < ApplicationController
   # Initialize attributes, assuming no table is selected and no navigation possible.
   def initialize_attributes
     @table_viewer = DynamicTable.new
-    @tables = case_insensitive_sort(Schema.get_user_tables)      # Too large to save in a session!  This is annoying because we're loading this from the DB every single time!!!
+    # TODO: Now that we're using sqlite3 for session info, persisting @table might be faster?
+    @tables = case_insensitive_sort(Schema.get_user_tables)
     @table_name = nil
     @parent_tables = []
     @child_tables = []

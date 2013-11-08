@@ -1,0 +1,15 @@
+- # The list of all tables.
+- # The render must pass in the path name.
+- # Example:
+- #   = render 'shared/user_tables', path: 'metadata'
+- # Which is handled in the route like this:
+- #   get "metadata" => "metadata#show_table_fields"
+
+.table_list_region
+  p Tables:
+  .table_list
+    ul
+      - @tables.each do |table_name|
+          li
+            = link_to polymorphic_path(path, table_name: table_name) do
+              t #{table_name}
