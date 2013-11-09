@@ -1,60 +1,89 @@
 Schema:
-  user_tables: "
-    select s.name + '.' + o.name as table_name
-    from sys.objects o
-    left join sys.schemas s on s.schema_id = o.schema_id
-    where type_desc = 'USER_TABLE'"
-  # gets the fields in the order returned by a query.  Is this different that "get_table_fields" ?
-  get_fields: "select * from [table] where 1=0"
-  get_table_fields: "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '[table]' AND TABLE_SCHEMA='[schema]'"
-  get_parents: "
-    SELECT
-      f.parent_object_id as ChildObjectID,
-      SCHEMA_NAME(f.schema_id) SchemaName,
-      OBJECT_NAME(f.parent_object_id) TableName,
-      COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
-      SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
-      OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
-      COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
-    FROM sys.foreign_keys AS f
-      INNER JOIN sys.foreign_key_columns AS fc ON f.OBJECT_ID = fc.constraint_object_id
-      INNER JOIN sys.tables t ON t.object_id = fc.referenced_object_id
-      INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
-    WHERE
-      OBJECT_NAME (f.parent_object_id) = '[table]'"
-  get_children: "
-    SELECT f.parent_object_id as ChildObjectID,
-      SCHEMA_NAME(f.schema_id) SchemaName,
-      OBJECT_NAME(f.parent_object_id) TableName,
-      COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
-      SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
-      OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
-      COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
-    FROM
-      sys.foreign_keys AS f
-      INNER JOIN sys.foreign_key_columns AS fc ON fc.constraint_object_id = f.OBJECT_ID
-      INNER JOIN sys.tables t ON t.OBJECT_ID = fc.referenced_object_id
-      INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
-    WHERE
-      OBJECT_NAME (f.referenced_object_id) = '[table]'"
+  PostgreSQL:
+    get_parents: "
+      select
+          att2.attname as \"child_column\",
+          cl.relname as \"parent_table\",
+          att.attname as \"parent_column\"
+      from
+         (select
+              unnest(con1.conkey) as \"parent\",
+              unnest(con1.confkey) as \"child\",
+              con1.confrelid,
+              con1.conrelid
+          from
+              pg_class cl
+              join pg_namespace ns on cl.relnamespace = ns.oid
+              join pg_constraint con1 on con1.conrelid = cl.oid
+          where
+              cl.relname = '[table]'
+              and ns.nspname = 'public'
+              and con1.contype = 'f'
+         ) con
+         join pg_attribute att on
+             att.attrelid = con.confrelid and att.attnum = con.child
+         join pg_class cl on
+             cl.oid = con.confrelid
+         join pg_attribute att2 on
+             att2.attrelid = con.conrelid and att2.attnum = con.parent"
 
-  # Replace "[childtable]" with the child table name.
-  # Replace "[parenttable]" with the parent table name.
-  # Gets the fields in the specific relationship between the child and the parent.
-  # child_object_id, SchemaName, TableName ColName, ReferencedSchemaName, ReferencedTableName, ReferencedColumnName
-  #                  |-------------- child -------| |-------------------- parent ---------------------------------|
-  get_key_fields: "
-    SELECT f.parent_object_id as ChildObjectID,
-      SCHEMA_NAME(f.schema_id) SchemaName,
-      OBJECT_NAME(f.parent_object_id) TableName,
-      COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
-      SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
-      OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
-      COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
-    FROM sys.foreign_keys AS f
-      INNER JOIN sys.foreign_key_columns AS fc ON f.OBJECT_ID = fc.constraint_object_id
-      INNER JOIN sys.tables t ON t.object_id = fc.referenced_object_id
-      INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
-    WHERE
-      OBJECT_NAME (f.parent_object_id) = '[childtable]' and
-      OBJECT_NAME (f.referenced_object_id) = '[parenttable]'"
+  SQLServer:
+    user_tables: "
+      select s.name + '.' + o.name as table_name
+      from sys.objects o
+      left join sys.schemas s on s.schema_id = o.schema_id
+      where type_desc = 'USER_TABLE'"
+    # gets the fields in the order returned by a query.  Is this different that "get_table_fields" ?
+    get_fields: "select * from [table] where 1=0"
+    get_table_fields: "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '[table]' AND TABLE_SCHEMA='[schema]'"
+    get_parents: "
+      SELECT
+        f.parent_object_id as ChildObjectID,
+        SCHEMA_NAME(f.schema_id) SchemaName,
+        OBJECT_NAME(f.parent_object_id) TableName,
+        COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
+        SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
+        OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
+        COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
+      FROM sys.foreign_keys AS f
+        INNER JOIN sys.foreign_key_columns AS fc ON f.OBJECT_ID = fc.constraint_object_id
+        INNER JOIN sys.tables t ON t.object_id = fc.referenced_object_id
+        INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
+      WHERE
+        OBJECT_NAME (f.parent_object_id) = '[table]'"
+    get_children: "
+      SELECT f.parent_object_id as ChildObjectID,
+        SCHEMA_NAME(f.schema_id) SchemaName,
+        OBJECT_NAME(f.parent_object_id) TableName,
+        COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
+        SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
+        OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
+        COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
+      FROM
+        sys.foreign_keys AS f
+        INNER JOIN sys.foreign_key_columns AS fc ON fc.constraint_object_id = f.OBJECT_ID
+        INNER JOIN sys.tables t ON t.OBJECT_ID = fc.referenced_object_id
+        INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
+      WHERE
+        OBJECT_NAME (f.referenced_object_id) = '[table]'"
+
+    # Replace "[childtable]" with the child table name.
+    # Replace "[parenttable]" with the parent table name.
+    # Gets the fields in the specific relationship between the child and the parent.
+    # child_object_id, SchemaName, TableName ColName, ReferencedSchemaName, ReferencedTableName, ReferencedColumnName
+    #                  |-------------- child -------| |-------------------- parent ---------------------------------|
+    get_key_fields: "
+      SELECT f.parent_object_id as ChildObjectID,
+        SCHEMA_NAME(f.schema_id) SchemaName,
+        OBJECT_NAME(f.parent_object_id) TableName,
+        COL_NAME(fc.parent_object_id,fc.parent_column_id) ColName,
+        SCHEMA_NAME(ref.schema_id) ReferencedSchemaName,
+        OBJECT_NAME(f.referenced_object_id) ReferencedTableName,
+        COL_NAME(fc.referenced_object_id, fc.referenced_column_id) ReferencedColumnName
+      FROM sys.foreign_keys AS f
+        INNER JOIN sys.foreign_key_columns AS fc ON f.OBJECT_ID = fc.constraint_object_id
+        INNER JOIN sys.tables t ON t.object_id = fc.referenced_object_id
+        INNER JOIN sys.tables ref ON ref.object_id = f.referenced_object_id
+      WHERE
+        OBJECT_NAME (f.parent_object_id) = '[childtable]' and
+        OBJECT_NAME (f.referenced_object_id) = '[parenttable]'"

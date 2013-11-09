@@ -9,7 +9,7 @@ module MyUtils
   # TODO: cache keys
   def get_query(key1, key2)
     sql = YAML.load_file(File.expand_path('config/queries.yml'))
-    sql[key1][key2]
+    sql[key1]["SQLServer"][key2]
   end
 
   # Given a dictionary of string => string, returns :symbol => string

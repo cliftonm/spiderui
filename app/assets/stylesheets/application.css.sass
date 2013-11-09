@@ -1,0 +1,38 @@
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
+ * or vendor/assets/stylesheets of plugins, if any, can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the top of the
+ * compiled file, but it's generally better to create a new file per style scope.
+ *
+ *= require_self
+ *= require jquery.minicolors
+ *= require_tree .
+ */
+
+@import themes/jquery.ui.ui-lightness
+
+@import jquery.ui.core
+@import jquery.ui.theme
+@import jquery.ui.datepicker
+@import jquery.ui.slider
+@import jquery.ui.spinner
+
+// @import jquery.ui.all
+
+// http://stackoverflow.com/questions/1309194/styling-the-jqueryui-datepicker
+.ui-datepicker
+  font-size: 9pt !important
+
+// Sizing for the property grid.
+.minicolors-theme-default
+  width: 100% !important
+  .minicolors-swatch
+    top: 3px !important
+    left: 5px !important
+    width: 11px !important
+    height: 12px !important
+

@@ -13,6 +13,11 @@ gem 'thin'
 gem 'sass'
 gem 'will_paginate'
 
+# controls:
+gem 'jquery-ui-sass-rails'
+gem 'jquery_datepicker'
+gem 'jquery-minicolors-rails'
+
 # Gems used only for assets and not required
 # in production environments by default.
 group :assets do

@@ -1,4 +1,6 @@
 =form_for @metadata do |f|
+  - # input type="text" data-behaviour='datepicker'
+  - # input id="metadata_prop_c" type="text" value="1962-08-19" size="30" name="metadata[prop_c]" data-behaviour='datepicker'
   = render 'shared/user_tables', path: 'metadata_table'
   - if !@metadata_table_name.nil?
     .left-padding-10
@@ -21,36 +23,10 @@
                     /= prop.get_input_control
                     - # must be processed here so that ERB has the context (the 'self') of the HTML pre-processor.
                     = render inline: ERB.new(prop.get_input_control).result(binding)
+                    - # = f.text_field :prop_c, class: 'datePicker'
 
-        /.table_data
-          table
-            tr
-              th Property
-              th Value
-            tr
-              td Read Only:
-              td.last
-                = check_box_tag "read_only"
-            tr
-              td Hidden:
-              td.last
-                = check_box_tag "hidden"
-            tr
-              td Validation:
-              td.last
-                = text_field_tag "validation"
-            tr
-              td Computation:
-              td.last
-                = text_field_tag "computation"
 
-  /.left-padding-10
-  /.container_types
-    .container_region
-      p Table Types:
-      .container
-
-    .bottom-padding
-    .container_region
-      p Field Types:
-      .container
+javascript:
+    $(".jq_dateTimePicker").datetimepicker({dateFormat: 'mm/dd/yy', timeFormat: 'hh:mm tt'});
+    $(".jq_timePicker").timepicker({timeFormat: "hh:mm tt"});
+    $(".jq_colorPicker").minicolors()
