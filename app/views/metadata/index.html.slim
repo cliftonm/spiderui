@@ -3,3 +3,54 @@
   - if !@metadata_table_name.nil?
     .left-padding-10
     = render 'shared/table_fields', path: 'metadata_field'
+    .left-padding-10
+    .property_grid
+      ul
+        - @metadata.property_grid_content.groups.each do |group|
+          li = group.name
+          .property_group
+            table
+              tr
+                th Property
+                th Value
+              - group.properties.each do |prop|
+                tr
+                  td
+                    = prop.property_name
+                  td.last
+                    /= prop.get_input_control
+                    - # must be processed here so that ERB has the context (the 'self') of the HTML pre-processor.
+                    = render inline: ERB.new(prop.get_input_control).result(binding)
+
+        /.table_data
+          table
+            tr
+              th Property
+              th Value
+            tr
+              td Read Only:
+              td.last
+                = check_box_tag "read_only"
+            tr
+              td Hidden:
+              td.last
+                = check_box_tag "hidden"
+            tr
+              td Validation:
+              td.last
+                = text_field_tag "validation"
+            tr
+              td Computation:
+              td.last
+                = text_field_tag "computation"
+
+  /.left-padding-10
+  /.container_types
+    .container_region
+      p Table Types:
+      .container
+
+    .bottom-padding
+    .container_region
+      p Field Types:
+      .container
