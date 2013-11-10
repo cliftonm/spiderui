@@ -4,12 +4,20 @@ class MetadataController < ApplicationController
   attr_session_accessor :metadata_table_name
   attr_session_accessor :metadata_field_name
 
+  attr_accessor :prop_i
+
   def index
     initialize_attributes
+    @prop_i = 2
 
     if self.metadata_table_name
       @fields = Schema.get_table_fields(@metadata_table_name)
     end
+  end
+
+  def post
+    q=5
+    redirect_to metadata_path+"/index"
   end
 
   def select_table

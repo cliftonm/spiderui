@@ -1,5 +1,6 @@
 DatabaseSpider::Application.routes.draw do
   get "metadata/index"
+  post "metadata/index" => "metadata#post"
   get "metadata"  => "metadata#index"
   get "metadata_table" => "metadata#select_table"
   get "metadata_field" => "metadata#select_field"

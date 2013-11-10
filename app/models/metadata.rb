@@ -49,7 +49,8 @@ class GroupProperty
       :datetime => FormType.new('text_field', 'jq_dateTimePicker'),
       :time => FormType.new('text_field', 'jq_timePicker'),
       :color => FormType.new('text_field', 'jq_colorPicker'),
-      :list => FormType.new('select')
+      :list => FormType.new('select'),
+      :db_list => FormType.new('select')
     }
   end
 
@@ -62,9 +63,10 @@ class GroupProperty
 
     # However, this is very cool:
     # http://stackoverflow.com/questions/18115669/how-to-insert-string-into-an-erb-file-for-rendering-in-rails-3-2
-    erb = "<%= f.#{form_type.type_name} '#{@property_var}'"
+    erb = "<%= f.#{form_type.type_name} :#{@property_var}"
     erb << ", class: '#{form_type.class_name}'" if form_type.class_name.present?
-    erb << ", #{@property_collection}" if @property_collection.present?
+    erb << ", #{@property_collection}" if @property_collection.present? && @property_type == :list
+    erb << ", options_from_collection_for_select(f.object.records, :id, :name, f.object.#{@property_var})" if @property_collection.present? && @property_type == :db_list
     erb << "%>"
   end
 end
@@ -85,6 +87,16 @@ class PropertyGridContent
   end
 end
 
+class ARecord # < NonPersistedActiveRecord
+  attr_accessor :id
+  attr_accessor :name
+
+  def initialize(id, name)
+    @id = id;
+    @name = name
+  end
+end
+
 class Metadata < NonPersistedActiveRecord
   attr_accessor :property_grid_content
 
@@ -96,8 +108,17 @@ class Metadata < NonPersistedActiveRecord
   attr_accessor :prop_f
   attr_accessor :prop_g
   attr_accessor :prop_h
+  attr_accessor :prop_i
+  attr_accessor :records
 
   def initialize
+    @records =
+        [
+            ARecord.new(1, 'California'),
+            ARecord.new(2, 'New York'),
+            ARecord.new(3, 'Rhode Island'),
+        ]
+
     @property_grid_content = PropertyGridContent.new().
       add_group('Text Input') do |group|
         group.add_property(:prop_a, 'Text').
@@ -106,16 +127,16 @@ class Metadata < NonPersistedActiveRecord
       add_group('Date and Time Pickers') do |group|
         group.add_property(:prop_c, 'Date', :date).
             add_property(:prop_d, 'Time', :time).
-            add_property(:prop_e, 'Date-Time', :datetime)
+            add_property(:prop_e, 'Date/Time', :datetime)
       end.
       add_group('State') do |group|
         group.add_property(:prop_f, 'Boolean', :boolean)
       end.
       add_group('Miscellaneous') do |group|
-        group.add_property(:prop_g, 'Color', :color)
-        group.add_property(:prop_h, 'List', :list, ['Apples', 'Oranges', 'Pears'])
+        group.add_property(:prop_g, 'Color', :color).
+            add_property(:prop_h, 'Basic List', :list, ['Apples', 'Oranges', 'Pears']).
+            add_property(:prop_i, 'ID - Name List', :db_list, @records)
       end
-
 
     @prop_a = 'Hello World'
     @prop_b = 'Password!'
@@ -124,6 +145,7 @@ class Metadata < NonPersistedActiveRecord
     @prop_e = '08/19/1962 12:32 pm'
     @prop_f = true
     @prop_g = '#ff0000'
-    @prop_h = 'Oranges'
+    @prop_h = 'Pears'
+    @prop_i = 2
   end
 end

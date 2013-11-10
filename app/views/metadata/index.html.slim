@@ -2,31 +2,52 @@
   - # input type="text" data-behaviour='datepicker'
   - # input id="metadata_prop_c" type="text" value="1962-08-19" size="30" name="metadata[prop_c]" data-behaviour='datepicker'
   = render 'shared/user_tables', path: 'metadata_table'
+
   - if !@metadata_table_name.nil?
     .left-padding-10
     = render 'shared/table_fields', path: 'metadata_field'
     .left-padding-10
     .property_grid
       ul
-        - @metadata.property_grid_content.groups.each do |group|
-          li = group.name
+        - @metadata.property_grid_content.groups.each_with_index do |group, index|
+          li class="expandableGroup#{index}" = group.name
           .property_group
-            table
-              tr
-                th Property
-                th Value
-              - group.properties.each do |prop|
+            div class="property_group#{index}"
+              table
                 tr
-                  td
-                    = prop.property_name
-                  td.last
-                    /= prop.get_input_control
-                    - # must be processed here so that ERB has the context (the 'self') of the HTML pre-processor.
-                    = render inline: ERB.new(prop.get_input_control).result(binding)
-                    - # = f.text_field :prop_c, class: 'datePicker'
+                  th Property
+                  th Value
+                - group.properties.each do |prop|
+                  tr
+                    td
+                      = prop.property_name
+                    td.last
+                      - # must be processed here so that ERB has the context (the 'self') of the HTML pre-processor.
+                      = render inline: ERB.new(prop.get_input_control).result(binding)
+  br
+  = f.submit 'Save'
 
+  - # Collapsible divs using jquery: http://stackoverflow.com/questions/8495257/jquery-simple-collapsible-div
 
 javascript:
     $(".jq_dateTimePicker").datetimepicker({dateFormat: 'mm/dd/yy', timeFormat: 'hh:mm tt'});
     $(".jq_timePicker").timepicker({timeFormat: "hh:mm tt"});
     $(".jq_colorPicker").minicolors()
+
+    // We need to dynamically creates this
+    $(".expandableGroup0").click(function()
+    {
+      $(".property_group0").slideToggle('slow');
+    });
+    $(".expandableGroup1").click(function()
+    {
+      $(".property_group1").slideToggle('slow');
+    });
+    $(".expandableGroup2").click(function()
+    {
+      $(".property_group2").slideToggle('slow');
+    });
+    $(".expandableGroup3").click(function()
+    {
+      $(".property_group3").slideToggle('slow');
+    });
