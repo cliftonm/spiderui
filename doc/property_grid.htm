@@ -1,0 +1,231 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>A PropertyGrid in Ruby on Rails</title>
+</head>
+
+<body>
+
+<p>A PropertyGrid in Ruby on Rails</p>
+<p>using JQuery UI and minimal Javascript to create a dynamic property grid 
+editor that can be initialized in a fluid programming style</p>
+<h2>Introduction</h2>
+<p>I needed a general purpose property grid editor that supported some fancy 
+things like date/time pickers, color pickers, etc., based on record fields known 
+only at runtime (this is ultimately a part of my next installment of the &quot;Spider 
+UI&quot; article series.)&nbsp; There's a snazzy Javascript-based property grid
+<a href="http://www.cssedit.co.uk/">here</a>, but I wanted something that was 
+minimally Javascript and more Ruby-on-Rails'ish.&nbsp; This is also partly 
+because I wanted something that I could interface well with record field types 
+and that would dynamically generate the grid based on schema information like 
+table fields.</p>
+<p>What I put together is a set of classes to facilitate build the content of a 
+property grid control.&nbsp; Because I enjoy railing (haha) against some of the 
+bad practices I see out there in Ruby-land, you will note that I opted for 
+actual classes and a &quot;fluid&quot; programming style, rather than what one typically 
+sees, such as arrays of hashes, symbols everywhere as keys, and Domain Specific 
+Languages (DSL's.)&nbsp; 
+Hashes (dictionaries) are fine for basic stuff but they tend to be very overused 
+and provide no contextual meaning as to their use.&nbsp; DSL's are over-used as 
+well, creating custom syntax when standard practices taken from other OOP 
+languages, such as C++ or C#, are perfectly suitable for accomplishing readable 
+code.</p>
+<h2>Supporting Classes</h2>
+<h3>Class PropertyGrid</h3>
+<pre># A PropertyGrid container
+# A property grid consists of property groups.
+class PropertyGrid
+  attr_accessor :groups
+
+  def initialize
+    @groups = []
+  end
+
+  # Give a group name, creates a group.
+  def add_group(name)
+    group = Group.new
+    group.name = name
+    @groups &lt;&lt; group
+    yield(group)         # yields to block creating group properties
+    self                 # returns the PropertyGrid instance
+  end
+end</pre>
+<p>There are two important points to this class:</p>
+<ol>
+	<li>Because <code>add_group</code> executes <code>yield(group)</code>, the caller can provide a block for 
+adding group properties.&nbsp; </li>
+	<li>Because <code>add_group</code> returns <code>self</code>, the caller can continue, in fluid 
+	programming style, to add more groups.</li>
+</ol>
+<p>Thus, we can write code like this:</p>
+<pre>@property_grid = PropertyGrid.new().
+  add_group('Text Input') do |group|
+    # add group properties here.
+  end.  #&lt;----  note this syntax
+  add_group('Date and Time Pickers') do |group|
+    # add group properties here.
+  end</pre>
+<p>Notice the &quot;dot&quot;: <code>end.</code> - because <code>add_group</code> returns <code>self</code> after the yield, we can use 
+a fluid programming style to continue adding groups.</p>
+<h3>Class Group</h3>
+<pre># Defines a PropertyGrid group
+# A group has a name and a collection of properties.
+class Group
+  attr_accessor :name
+  attr_accessor :properties
+
+  def initialize
+    @name = nil
+    @properties = []
+  end
+
+  def add_property(var, name, property_type = :string, collection = nil)
+    group_property = GroupProperty.new(var, name, property_type, collection)
+    @properties &lt;&lt; group_property
+    self
+  end
+end</pre>
+<p>A group has a name and manages a collection of properties.&nbsp; The 
+<code>add_property</code> class returns <code>self</code>, so again we can use a fluid notation:</p>
+<pre>group.add_property(:prop_c, 'Date', :date).
+  add_property(:prop_d, 'Time', :time).
+  add_property(:prop_e, 'Date/Time', :datetime)</pre>
+<p>Notice the &quot;dot&quot; after each call to <code>add_property</code>, allowing us to call 
+<code>add_property</code> again, operating on the same group instance.</p>
+<p>Nothing about this is stopping us from using more idiomatic Ruby syntax, for 
+example:</p>
+<pre>group.properties <<
+  GroupProperty.new(:prop_c, 'Date', :date) &lt;&lt; 
+  GroupProperty.new(:prop_d, 'Time', :time) &lt;&lt;
+  GroupProperty.new(:prop_e, &quot;Date/Time&quot;, :datetime)</pre>
+<h2>What Would a DSL Implementation Look Like?</h2>
+<p>Fair enough, if I'm going to complain about misplaced DSL's, let's see what 
+it would look like if I wrote the property grid container objects as a DSL.&nbsp; 
+If you're interested, there's a great tutorial on writing internal DSL's in Ruby
+<a href="http://jroller.com/rolsen/entry/building_a_dsl_in_ruby">here</a>, and 
+what I'm doing should look very similar.&nbsp; Basically, DSL's use a
+<a href="http://en.wikipedia.org/wiki/Builder_pattern">builder pattern</a>, and 
+if you're interested in design patterns in Ruby,
+<a href="http://blog.rubybestpractices.com/posts/gregory/059-issue-25-creational-design-patterns.html">
+here's</a> a good tutorial.</p>
+<p>What we want is to be able to declare a property grid instance as if it were 
+part of the Ruby language.&nbsp; So I'll start with:</p>
+<pre>@property_grid = new_property_grid
+group 'Text Input'
+group_property 'Text', :prop_a
+group_property 'Password', :prop_b, :password
+group 'Date and Time Pickers'
+group_property 'Date', :prop_c, :date
+group_property 'Time', :prop_d, :date
+group_property 'Date/Time', :prop_e, :datetime
+group 'State'
+group_property 'Boolean', :prop_f, :boolean
+group 'Miscellaneous'
+group_property 'Color', :prop_g, :color
+group 'Lists'
+group_property 'Basic List', :prop_h, :list, ['Apples', 'Oranges', 'Pears']
+group_property 'ID - Name List', :prop_i, :db_list, @records</pre>
+<p>The implementation consists of three methods:</p>
+<ol>
+	<li>new_property_grid</li>
+	<li>group</li>
+	<li>property</li>
+</ol>
+<p>that are essentially factory patterns for building an instance of the 
+property groups and their properties.&nbsp; The implementation is in a module 
+and leverages our underlying classes:</p>
+<pre>module PropertyGridDsl
+  def new_property_grid(name = nil)
+    @__property_grid = PropertyGrid.new
+
+    @__property_grid
+  end
+
+  def group(name)
+    group = Group.new
+    group.name = name
+    @__property_grid.groups &lt;&lt; group
+
+    group
+  end
+
+  def group_property(name, var, type = :string, collection = nil)
+    group_property = GroupProperty.new(var, name, type, collection)
+    @__property_grid.groups.last.properties &lt;&lt; group_property
+
+    group_property
+  end
+end</pre>
+<p>This implementation takes advantage of the variable <code>@__property_grid</code> which 
+maintains the current instance being applied in the DSL script.&nbsp; We don't 
+use a singleton pattern because we want to allow for multiple instances of 
+property grids on the same web page.</p>
+<h3>Good DSL, Bad DSL</h3>
+<p>The advantages are fairly obvious - the resulting script to generate the 
+property grid is compact and readable.&nbsp; The above DSL is simple - it's effectively nothing more than helper methods 
+that wrap the details of working with the underlying classes.&nbsp; 
+Unfortunately, I've seen a lot of DSL's (granted, that are more complex) that 
+require lots of hashes and symbols.&nbsp; For example, imagine writing something 
+like this:</p>
+<pre>group_property label: 'Basic List', var: :prop_h, type: :list, collection: ['Apples', 'Oranges', 'Pears']</pre>
+<p>or, in earlier idiomatic Ruby:</p>
+<pre>group_property :label =&gt; 'Basic List', :var =&gt; :prop_h, :type =&gt; :list, :collection =&gt; ['Apples', 'Oranges', 'Pears']</pre>
+<p>As Martin Fowler writes
+<a href="http://martinfowler.com/bliki/SyntacticNoise.html">here</a>, you can 
+see the &quot;syntactic noise&quot; of the DSL increasing depending on the implementation 
+and the idiomatic syntax of the language.&nbsp; However, as you can also see, a 
+well written DSL can greatly reduce the &quot;syntactic noise&quot; of typical OOP 
+practices.&nbsp; Compare:</p>
+<pre>@property_grid = new_property_grid
+group 'Text Input'
+group_property 'Text', :prop_a</pre>
+<p>with:</p>
+<pre>@property_grid = PropertyGrid.new().
+  add_group('Text Input') do |group|
+    group.add_property(:prop_a, 'Text').
+    add_property(:prop_b, 'Password', :password)
+  end</pre>
+<p>Certainly working with the class implementation, even in its &quot;fluid&quot; form, is 
+noisier than the DSL!</p>
+<p>The major pitfall of working with a DSL is, in my experience, three-fold:</p>
+<ol>
+	<li>The underlying implementation is poorly architected, doesn't follow good 
+	OOP practices, and potentially isn't even object oriented.&nbsp; The result 
+	is a morass of spaghetti code which the DSL nicely (perhaps) hides but is a 
+	maintenance nightmare.</li>
+	<li>DSL's that utilize &quot;wildcard&quot; parameter lists and rely heavily on hashes 
+	of symbol-value pairs, arrays of hashes, hashes of symbol-arrays, etc., are 
+	almost impossible to reverse engineer as to all the different permutations 
+	of parameters and allowable symbols.&nbsp; And I guarantee you that the 
+	documentation (if it exists) will not be up-to-date, and you really don't 
+	want to read through hundreds of unit tests to glean the workings.</li>
+	<li>Classes are extensible.&nbsp; If I want to add some new behaviors, I can 
+	derive a custom class.&nbsp; If I don't have access to the underlying 
+	classes, this because impossible (in Ruby, this is the bad practice of 
+	&quot;monkey-patching&quot; resulting from poorly designed implementations, which 
+	quite frankly is a consequence of the fact that Ruby, in not supporting 
+	interfaces, implicitly promotes the use of concrete classes rather than 
+	design patterns based on abstractions -- keep this in mind if you want to do 
+	large scale development in Ruby.)</li>
+</ol>
+<p>So, to put it positively, DSL's are great if:</p>
+<ol>
+	<li>The underlying implementation is well architected.</li>
+	<li>You reduce/eliminate &quot;syntactic noise&quot;.</li>
+	<li>You expose the underlying classes, allowing others to extend them and 
+	also add to the DSL's capabilities through class extensions.</li>
+</ol>
+<p>Incidentally, there are a couple good articles on adding &quot;interfaces&quot; to Ruby
+<a href="http://metabates.com/2011/02/07/building-interfaces-and-abstract-classes-in-ruby/">
+here</a> and <a href="http://rubydoc.info/gems/interface/1.0.2/frames">here</a>.&nbsp; 
+Consider using these and other good OOP practices!</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

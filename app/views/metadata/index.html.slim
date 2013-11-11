@@ -9,7 +9,7 @@
     .left-padding-10
     .property_grid
       ul
-        - @metadata.property_grid_content.groups.each_with_index do |group, index|
+        - @metadata.property_grid.groups.each_with_index do |group, index|
           li class="expandableGroup#{index}" = group.name
           .property_group
             div class="property_group#{index}"

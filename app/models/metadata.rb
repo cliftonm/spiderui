@@ -1,5 +1,9 @@
 require 'erb'
+include PropertyGridDsl
 
+
+# Defines a PropertyGrid group
+# A group has a name and a collection of properties.
 class Group
   attr_accessor :name
   attr_accessor :properties
@@ -34,7 +38,7 @@ class GroupProperty
 
   # some of these leverage jquery: http://jqueryui.com/
 
-  def initialize(var, name, property_type, collection)
+  def initialize(var, name, property_type, collection = nil)
     @property_var = var
     @property_name = name
     @property_type = property_type
@@ -71,23 +75,26 @@ class GroupProperty
   end
 end
 
-class PropertyGridContent
+# A PropertyGrid container
+# A property grid consists of property groups.
+class PropertyGrid
   attr_accessor :groups
 
   def initialize
     @groups = []
   end
 
+  # Give a group name, creates a group.
   def add_group(name)
     group = Group.new
     group.name = name
     @groups << group
-    yield(group)
-    self
+    yield(group)          # yields to block creating group properties
+    self                  # returns the PropertyGrid instance
   end
 end
 
-class ARecord # < NonPersistedActiveRecord
+class ARecord
   attr_accessor :id
   attr_accessor :name
 
@@ -98,7 +105,7 @@ class ARecord # < NonPersistedActiveRecord
 end
 
 class Metadata < NonPersistedActiveRecord
-  attr_accessor :property_grid_content
+  attr_accessor :property_grid
 
   attr_accessor :prop_a
   attr_accessor :prop_b
@@ -118,8 +125,8 @@ class Metadata < NonPersistedActiveRecord
             ARecord.new(2, 'New York'),
             ARecord.new(3, 'Rhode Island'),
         ]
-
-    @property_grid_content = PropertyGridContent.new().
+#=begin
+    @property_grid = PropertyGrid.new().
       add_group('Text Input') do |group|
         group.add_property(:prop_a, 'Text').
             add_property(:prop_b, 'Password', :password)
@@ -133,10 +140,30 @@ class Metadata < NonPersistedActiveRecord
         group.add_property(:prop_f, 'Boolean', :boolean)
       end.
       add_group('Miscellaneous') do |group|
-        group.add_property(:prop_g, 'Color', :color).
-            add_property(:prop_h, 'Basic List', :list, ['Apples', 'Oranges', 'Pears']).
+        group.add_property(:prop_g, 'Color', :color)
+      end.
+      add_group('Lists') do |group|
+        group.add_property(:prop_h, 'Basic List', :list, ['Apples', 'Oranges', 'Pears']).
             add_property(:prop_i, 'ID - Name List', :db_list, @records)
       end
+#=end
+=begin
+    @property_grid = new_property_grid
+    group 'Text Input'
+    group_property 'Text', :prop_a
+    group_property 'Password', :prop_b, :password
+    group 'Date and Time Pickers'
+    group_property 'Date', :prop_c, :date
+    group_property 'Time', :prop_d, :date
+    group_property 'Date/Time', :prop_e, :datetime
+    group 'State'
+    group_property 'Boolean', :prop_f, :boolean
+    group 'Miscellaneous'
+    group_property 'Color', :prop_g, :color
+    group 'Lists'
+    group_property 'Basic List', :prop_h, :list, ['Apples', 'Oranges', 'Pears']
+    group_property 'ID - Name List', :prop_i, :db_list, @records
+=end
 
     @prop_a = 'Hello World'
     @prop_b = 'Password!'
