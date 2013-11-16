@@ -27,45 +27,11 @@
   br
   = f.submit 'Save'
 
-  - # Collapsible divs using jquery: http://stackoverflow.com/questions/8495257/jquery-simple-collapsible-div
+  // Add in generated javascript
+  = javascript_tag @javascript
 
 javascript:
     $(".jq_dateTimePicker").datetimepicker({dateFormat: 'mm/dd/yy', timeFormat: 'hh:mm tt'});
     $(".jq_timePicker").timepicker({timeFormat: "hh:mm tt"});
     $(".jq_colorPicker").minicolors()
 
-    // We need to dynamically creates this
-    $(".expandableGroup0").click(function()
-    {
-      var hidden = $(".property_group0").is(":hidden");       // get the value BEFORE making the slideToggle call.
-      $(".property_group0").slideToggle('slow');
-
-                                                              // At this point,  $(".property_group0").is(":hidden");
-                                                              // ALWAYS RETURNS FALSE
-
-      if (!hidden)                                            // Remember, this is state that the div WAS in.
-      {
-        $(".expandableGroup0").removeClass('expanded');
-        $(".expandableGroup0").addClass('collapsed');
-      }
-      else
-      {
-        $(".expandableGroup0").removeClass('collapsed');
-        $(".expandableGroup0").addClass('expanded');
-      }
-    });
-
-    $(".expandableGroup1").click(function()
-    {
-      $(".property_group1").slideToggle('slow');
-    });
-
-    $(".expandableGroup2").click(function()
-    {
-      $(".property_group2").slideToggle('slow');
-    });
-
-    $(".expandableGroup3").click(function()
-    {
-      $(".property_group3").slideToggle('slow');
-    });

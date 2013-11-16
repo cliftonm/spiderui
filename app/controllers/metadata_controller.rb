@@ -4,11 +4,10 @@ class MetadataController < ApplicationController
   attr_session_accessor :metadata_table_name
   attr_session_accessor :metadata_field_name
 
-  attr_accessor :prop_i
+  attr_accessor :javascript
 
   def index
     initialize_attributes
-    @prop_i = 2
 
     if self.metadata_table_name
       @fields = Schema.get_table_fields(@metadata_table_name)
@@ -16,7 +15,6 @@ class MetadataController < ApplicationController
   end
 
   def post
-    q=5
     redirect_to metadata_path+"/index"
   end
 
@@ -33,5 +31,9 @@ class MetadataController < ApplicationController
     @metadata = Metadata.new
     @tables = case_insensitive_sort(Schema.get_user_tables)      # Too large to save in a session!  This is annoying because we're loading this from the DB every single time!!!
     @metadata_table_name = nil
+    @javascript = ''
+    @metadata.property_grid.groups.each_with_index do |grp, index|
+      @javascript << get_javascript_for_group(index)
+    end
   end
 end

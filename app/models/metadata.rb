@@ -26,6 +26,32 @@ def get_property_type_map
   }
 end
 
+def get_javascript_for_group(index)
+  js = %Q|
+    $(".expandableGroup[idx]").click(function()
+    {
+      var hidden = $(".property_group[idx]").is(":hidden");       // get the value BEFORE making the slideToggle call.
+      $(".property_group[idx]").slideToggle('slow');
+
+                                                                  // At this point,  $(".property_group0").is(":hidden");
+                                                                  // ALWAYS RETURNS FALSE
+
+      if (!hidden)                                                // Remember, this is state that the div WAS in.
+      {
+        $(".expandableGroup[idx]").removeClass('expanded');
+        $(".expandableGroup[idx]").addClass('collapsed');
+      }
+      else
+      {
+        $(".expandableGroup[idx]").removeClass('collapsed');
+        $(".expandableGroup[idx]").addClass('expanded');
+      }
+    });
+  |.gsub('[idx]', index.to_s)
+
+  js
+end
+
 # Defines a PropertyGrid group
 # A group has a name and a collection of properties.
 class Group
