@@ -37,14 +37,26 @@ fieldset.field_types
   ul
     margin: 0 0 0 0
     padding: 0 0 0 0
-  li
+  li.expanded
+    background: url(/assets/up.png) no-repeat
+    background-position: 0px 4px
     list-style-type: none
     background-color: #0000FF
     color: #ffffff
-    padding-left: 2px
+    padding-left: 20px
     padding-top: 2px
     padding-bottom: 3px
-    width: 100%-2px
+    height: 16px
+  li.collapsed
+    background: url(/assets/down.png) no-repeat
+    background-position: 0px 1px
+    list-style-type: none
+    background-color: #0000FF
+    color: #ffffff
+    padding-left: 20px
+    padding-top: 2px
+    padding-bottom: 3px
+    height: 16px
   .property_group
     width: 100%
     table
@@ -54,7 +66,6 @@ fieldset.field_types
       border-collapse: collapse
       margin-left: 10px
       table-layout: fixed
-      width: 100%-10px
       th
         padding-left: 5px
         padding-right: 5px

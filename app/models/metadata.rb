@@ -1,6 +1,30 @@
 require 'erb'
 include PropertyGridDsl
 
+class ControlType
+  attr_accessor :type_name
+  attr_accessor :class_name
+
+  def initialize(type_name, class_name = nil)
+    @type_name = type_name
+    @class_name = class_name
+  end
+end
+
+def get_property_type_map
+  {
+      string: ControlType.new('text_field'),
+      text: ControlType.new('text_area'),
+      boolean: ControlType.new('check_box'),
+      password: ControlType.new('password_field'),
+      date: ControlType.new('datepicker'),
+      datetime: ControlType.new('text_field', 'jq_dateTimePicker'),
+      time: ControlType.new('text_field', 'jq_timePicker'),
+      color: ControlType.new('text_field', 'jq_colorPicker'),
+      list: ControlType.new('select'),
+      db_list: ControlType.new('select')
+  }
+end
 
 # Defines a PropertyGrid group
 # A group has a name and a collection of properties.
@@ -20,16 +44,6 @@ class Group
   end
 end
 
-class FormType
-  attr_accessor :type_name
-  attr_accessor :class_name
-
-  def initialize(type_name, class_name = nil)
-    @type_name = type_name
-    @class_name = class_name
-  end
-end
-
 class GroupProperty
   attr_accessor :property_var
   attr_accessor :property_name
@@ -43,30 +57,12 @@ class GroupProperty
     @property_name = name
     @property_type = property_type
     @property_collection = collection
-
-    @property_type_map = {
-      :string => FormType.new('text_field'),
-      :text => FormType.new('text_area'),
-      :boolean => FormType.new('check_box'),
-      :password => FormType.new('password_field'),
-      :date => FormType.new('datepicker'),
-      :datetime => FormType.new('text_field', 'jq_dateTimePicker'),
-      :time => FormType.new('text_field', 'jq_timePicker'),
-      :color => FormType.new('text_field', 'jq_colorPicker'),
-      :list => FormType.new('select'),
-      :db_list => FormType.new('select')
-    }
   end
 
   def get_input_control
-    # For example:
-    # '<input name="validation"/>'.html_safe
-
-    form_type = @property_type_map[@property_type]
+    form_type = get_property_type_map[@property_type]
     raise "Property '#{@property_type}' is not mapped to a Rails form input control" if form_type.nil?
 
-    # However, this is very cool:
-    # http://stackoverflow.com/questions/18115669/how-to-insert-string-into-an-erb-file-for-rendering-in-rails-3-2
     erb = "<%= f.#{form_type.type_name} :#{@property_var}"
     erb << ", class: '#{form_type.class_name}'" if form_type.class_name.present?
     erb << ", #{@property_collection}" if @property_collection.present? && @property_type == :list

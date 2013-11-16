@@ -10,7 +10,7 @@
     .property_grid
       ul
         - @metadata.property_grid.groups.each_with_index do |group, index|
-          li class="expandableGroup#{index}" = group.name
+          li.expanded class="expandableGroup#{index}" = group.name
           .property_group
             div class="property_group#{index}"
               table
@@ -37,16 +37,34 @@ javascript:
     // We need to dynamically creates this
     $(".expandableGroup0").click(function()
     {
+      var hidden = $(".property_group0").is(":hidden");       // get the value BEFORE making the slideToggle call.
       $(".property_group0").slideToggle('slow');
+
+                                                              // At this point,  $(".property_group0").is(":hidden");
+                                                              // ALWAYS RETURNS FALSE
+
+      if (!hidden)                                            // Remember, this is state that the div WAS in.
+      {
+        $(".expandableGroup0").removeClass('expanded');
+        $(".expandableGroup0").addClass('collapsed');
+      }
+      else
+      {
+        $(".expandableGroup0").removeClass('collapsed');
+        $(".expandableGroup0").addClass('expanded');
+      }
     });
+
     $(".expandableGroup1").click(function()
     {
       $(".property_group1").slideToggle('slow');
     });
+
     $(".expandableGroup2").click(function()
     {
       $(".property_group2").slideToggle('slow');
     });
+
     $(".expandableGroup3").click(function()
     {
       $(".property_group3").slideToggle('slow');
