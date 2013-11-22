@@ -1,31 +1,34 @@
-=form_for @metadata do |f|
-  - # input type="text" data-behaviour='datepicker'
-  - # input id="metadata_prop_c" type="text" value="1962-08-19" size="30" name="metadata[prop_c]" data-behaviour='datepicker'
-  = render 'shared/user_tables', path: 'metadata_table'
+- # input type="text" data-behaviour='datepicker'
+- # input id="metadata_prop_c" type="text" value="1962-08-19" size="30" name="metadata[prop_c]" data-behaviour='datepicker'
+= render 'shared/user_tables', path: 'metadata_table'
 
-  - if !@metadata_table_name.nil?
-    .left-padding-10
-    = render 'shared/table_fields', path: 'metadata_field'
-    .left-padding-10
-    .property_grid
-      ul
-        - @metadata.property_grid.groups.each_with_index do |group, index|
-          li.expanded class="expandableGroup#{index}" = group.name
-          .property_group
-            div class="property_group#{index}"
-              table
-                tr
-                  th Property
-                  th Value
-                - group.properties.each do |prop|
+- if @metadata_table_name.present?
+  .left-padding-10
+  = render 'shared/table_fields', path: 'metadata_field'
+  - if @metadata_field_name.present?
+    = fields_for @metadata_field_type do |f|
+      .padding-10-20
+      br Field: #{@metadata_field_name}
+      .left-padding-10
+      .property_grid
+        ul
+          - @property_grid.groups.each_with_index do |group, index|
+            li.expanded class="expandableGroup#{index}" = group.name
+            .property_group
+              div class="property_group#{index}"
+                table
                   tr
-                    td
-                      = prop.property_name
-                    td.last
-                      - # must be processed here so that ERB has the context (the 'self') of the HTML pre-processor.
-                      = render inline: ERB.new(prop.get_input_control).result(binding)
-  br
-  = f.submit 'Save'
+                    th Property
+                    th Value
+                  - group.properties.each do |prop|
+                    tr
+                      td
+                        = prop.property_name
+                      td.last
+                        - # must be processed here so that ERB has the context (the 'self') of the HTML pre-processor.
+                        = render inline: ERB.new(prop.get_input_control).result(binding)
+      .left-padding-10
+      = f.submit 'Save'
 
   // Add in generated javascript
   = javascript_tag @javascript

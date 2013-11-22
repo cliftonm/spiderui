@@ -14,6 +14,7 @@ gem 'sass'
 gem 'will_paginate'
 
 # controls:
+gem 'property_grid'
 gem 'jquery-ui-sass-rails'
 gem 'jquery_datepicker'
 gem 'jquery-minicolors-rails'
